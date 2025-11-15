@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Export Per Date - Full</title>
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+<style>
+  body { font-family:'Segoe UI',sans-serif; background:#0a0b15; color:#e0e0e0; display:flex; justify-content:center; padding:18px; }
+  .container { width:95%; max-width:1100px; background:#101126; padding:24px; border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,0.7); }
+  h2 { text-align:center; color:#00ffd0; text-shadow:0 0 8px #00ffd0; margin-top:0; }
+  label { display:block; margin-top:8px; color:#bfefff; }
+  input[type="file"], input[type="date"] { width:100%; padding:10px; margin-top:6px; margin-bottom:6px; border-radius:8px; border:none; background:#1a1b2a; color:#e6f9ff; }
+  .buttons { display:flex; gap:16px; margin-top:12px; }
+  button { flex:1; padding:12px; border-radius:12px; border:none; font-weight:600; cursor:pointer; background:linear-gradient(135deg,#00ffd0,#0070ff); color:#04121a; box-shadow:0 6px 18px rgba(0,0,0,0.6); }
+  button.running { animation: neonGlow 1.2s infinite alternate; }
+  @keyframes neonGlow { 0%{ box-shadow:0 0 8px #00ffd0,0 0 18px #00ffd0 } 100%{ box-shadow:0 0 18px #00ffd0,0 0 36px #00ffd0 } }
+  .progress-container { margin-top:12px; background:#1a1b2a; border-radius:10px; overflow:hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+  .progress-bar { height:20px; width:0%; background:linear-gradient(90deg,#00ffd0,#0070ff); text-align:center; color:#001; font-weight:700; transition:width 0.25s ease; }
+  #logPanel { margin-top:14px; border-radius:10px; overflow:hidden; border:1px solid #18202a; box-shadow:0 8px 30px rgba(0,0,0,0.6); }
+  #logTitle { background:#071127; color:#66f6ff; padding:8px 12px; font-weight:700; letter-spacing:0.6px; border-bottom:1px solid #0f2030; }
+  #logOutput { background:#071127; color:#dff7ff; padding:12px; font-family:Consolas, "Courier New", monospace; white-space:pre-wrap; max-height:260px; overflow:auto; margin:0; }
+  .note { margin-top:10px; color:#9fd9ff; font-size:13px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>🚀 Export Per Date — Control Panel</h2>
+
+  <label>Upload Excel File</label>
+  <input id="file" type="file" accept=".xls,.xlsx">
+
+  <div style="display:flex;gap:12px;margin-top:8px;">
+    <div style="flex:1">
+      <label>Start Date</label>
+      <input id="start" type="date">
+    </div>
+    <div style="flex:1">
+      <label>End Date</label>
+      <input id="end" type="date">
+    </div>
+  </div>
+
+  <div class="buttons">
+    <button id="run">Run</button>
+    <button id="download" disabled>Download</button>
+  </div>
+
+  <div class="progress-container">
+    <div id="progress-bar" class="progress-bar">0%</div>
+  </div>
+
+  <div id="logPanel">
+    <div id="logTitle">LOG OUTPUT</div>
+    <pre id="logOutput">Ready.</pre>
+  </div>
+
+  <div class="note">
+    Note: Sheet names follow <code>MM_DD_YYYY</code>. Log shows <code>MM_DD_YYYY = count</code>.
+  </div>
+</div>
+
+<script>
+const logEl = document.getElementById('logOutput');
+const setLog = (s) => { logEl.textContent += '\n'+s; logEl.scrollTop = logEl.scrollHeight; };
+const clearLog = () => { logEl.textContent = ''; };
+const setProgress = p => { const el = document.getElementById('progress-bar'); el.style.width = p+'%'; el.textContent = p+'%'; };
+
+const btnRun = document.getElementById('run');
+const btnDownload = document.getElementById('download');
+let processedWB = null;
+
+/* DATE PARSING */
+const parseU = v => {
+  if(v == null || v === '') return null;
+  if(v instanceof Date) return v;
+  if(typeof v === 'number'){
+    const d = XLSX.SSF.parse_date_code(v);
+    if(d) return new Date(d.y,d.m-1,d.d,d.H,d.M,d.S);
+  }
+  if(typeof v === 'string'){
+    const s = v.trim();
+    let m = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/);
+    if(m) return new Date(m[3],m[1]-1,m[2],m[4],m[5]);
+    m = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if(m) return new Date(m[3],m[1]-1,m[2]);
+    const d = new Date(s);
+    if(!isNaN(d)) return d;
+  }
+  return null;
+};
+
+const formatTextDate = dt => {
+  if(!dt || isNaN(dt)) return '';
+  const mm = String(dt.getMonth()+1).padStart(2,'0');
+  const dd = String(dt.getDate()).padStart(2,'0');
+  const yyyy = dt.getFullYear();
+  const hh = String(dt.getHours()).padStart(2,'0');
+  const mi = String(dt.getMinutes()).padStart(2,'0');
+  return `${mm}/${dd}/${yyyy} ${hh}:${mi}`;
+};
+
+const forceDateText = v => {
+  const d = parseU(v);
+  if(!d || isNaN(d)) return v ?? '';
+  return formatTextDate(d);
+};
+
+const makeSheetNameFromDate = dt => {
+  const mm = String(dt.getMonth()+1).padStart(2,'0');
+  const dd = String(dt.getDate()).padStart(2,'0');
+  const yyyy = dt.getFullYear();
+  return `${mm}_${dd}_${yyyy}`.slice(0,31);
+};
+
+/* MAIN PROCESS */
+btnRun.addEventListener('click', async () => {
+  const fileInput = document.getElementById('file');
+  const startVal = document.getElementById('start').value;
+  const endVal = document.getElementById('end').value;
+
+  if(!fileInput.files[0]) return alert('Select Excel file');
+  if(!startVal || !endVal) return alert('Select start + end dates');
+
+  btnRun.disabled = true;
+  btnRun.classList.add('running');
+  btnRun.textContent = 'Processing...';
+  btnDownload.disabled = true;
+  clearLog(); setLog('Reading file...'); setProgress(0);
+
+  try {
+    const data = await fileInput.files[0].arrayBuffer();
+    const wb = XLSX.read(data, { type:'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
+
+    if(rows.length < 6) throw 'File needs ≥ 6 rows';
+
+    const headers = rows.slice(0,4);
+    const body = rows.slice(4);
+
+    const colQ = 16;
+    const colU = 20;
+
+    const batchGroups = {};
+    body.forEach((r, idx) => {
+      const batchKey = (r[colQ] || '').toString().trim();
+      const rawU = r[colU];
+      if(batchKey === '' && !rawU) return;
+      if(!batchGroups[batchKey]) batchGroups[batchKey] = [];
+      batchGroups[batchKey].push({ row:r, rawU });
+    });
+
+    const dateGroups = {};
+    const sheetDates = {};
+
+    const startDate = new Date(startVal+'T00:00:00');
+    const endDate = new Date(endVal+'T23:59:59');
+
+    const keys = Object.keys(batchGroups);
+    let processed = 0;
+
+    /* ------------------ TRUE CUTOFF LOGIC (19:00 → 18:59) ------------------ */
+    for(const batchKey of keys){
+      const items = batchGroups[batchKey];
+      const parsed = items.map(it=>({ ...it, dt:parseU(it.rawU) }))
+                         .filter(x=>x.dt && !isNaN(x.dt));
+      if(parsed.length===0){ processed++; setProgress(processed/keys.length*100); continue; }
+
+      const minDt = new Date(Math.min(...parsed.map(p=>p.dt.getTime())));
+      const batchDate = new Date(minDt);
+      const hour = batchDate.getHours();
+
+      if(hour < 19) batchDate.setDate(batchDate.getDate()-1);
+
+      batchDate.setHours(0,0,0,0);
+
+      if(batchDate >= startDate && batchDate <= endDate){
+        const key = batchDate.toISOString().slice(0,10);
+        if(!dateGroups[key]) dateGroups[key] = {};
+        dateGroups[key][batchKey] = parsed;
+        sheetDates[key] = batchDate;
+      }
+
+      processed++;
+      setProgress(Math.floor(processed/keys.length*100));
+    }
+    /* ---------------- END OF CUTOFF LOGIC ---------------- */
+
+    const allDateKeys = Object.keys(dateGroups).sort();
+    if(allDateKeys.length===0) throw 'No rows matched your date range';
+
+    const outWB = XLSX.utils.book_new();
+    const batchCounts = {};
+
+    const forceCols = [1,18,19,20,31,32,33];
+
+    let sheetIndex = 0;
+    for(const dateKey of allDateKeys){
+      const batches = dateGroups[dateKey];
+
+      const sortedBatchKeys = Object.keys(batches)
+        .map(bk=>({ bk, min:Math.min(...batches[bk].map(x=>x.dt.getTime())) }))
+        .sort((a,b)=>a.min-b.min)
+        .map(x=>x.bk);
+
+      const allRows = [];
+      for(const bk of sortedBatchKeys){
+        allRows.push([`BATCH: ${bk}`]);
+        const rowsForBatch = batches[bk].slice().sort((a,b)=>a.dt-b.dt);
+        for(const entry of rowsForBatch){
+          const rowCopy = entry.row.slice();
+          for(const ci of forceCols) rowCopy[ci] = forceDateText(rowCopy[ci]);
+          if(rowCopy[20]){
+            const d = parseU(rowCopy[20]);
+            if(d) rowCopy[20] = formatTextDate(d);
+          }
+          allRows.push(rowCopy);
+        }
+      }
+
+      const finalData = headers.concat(allRows);
+      const wsOut = XLSX.utils.aoa_to_sheet(finalData);
+
+      const sheetName = makeSheetNameFromDate(sheetDates[dateKey]);
+      XLSX.utils.book_append_sheet(outWB, wsOut, sheetName);
+
+      const aoa = XLSX.utils.sheet_to_json(wsOut,{header:1,defval:''});
+      const exportedBody = aoa.slice(5);
+      const uniq = new Set();
+      exportedBody.forEach(r=>{
+        const v=(r[16] ?? '').toString().trim();
+        if(v) uniq.add(v);
+      });
+      batchCounts[sheetName] = uniq.size;
+
+      sheetIndex++;
+      setProgress(Math.floor(sheetIndex/allDateKeys.length*100));
+    }
+
+    setLog('Batch Counts:');
+    Object.keys(batchCounts).sort().forEach(sn=>setLog(`${sn} = ${batchCounts[sn]}`));
+
+    processedWB = outWB;
+    btnDownload.disabled = false;
+    setProgress(100);
+    setLog('✅ DONE. You may now click DOWNLOAD.');
+  }
+
+  catch(err){
+    setLog('⚠ ERROR: '+err);
+  }
+
+  finally {
+    btnRun.disabled=false;
+    btnRun.classList.remove('running');
+    btnRun.textContent='Run';
+  }
+});
+
+/* DOWNLOAD */
+btnDownload.addEventListener('click', () => {
+  if(!processedWB) return alert('Run first.');
+  XLSX.writeFile(processedWB,'Export_PerDate_Styled.xlsx');
+  setLog('📦 Export_PerDate_Styled.xlsx saved.');
+});
+</script>
+
+</body>
+</html>
