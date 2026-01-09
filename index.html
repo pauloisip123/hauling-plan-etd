@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>Export Per Date</title>
+<title>Export Per Date - Full</title>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
 <style>
@@ -25,7 +25,7 @@
 </head>
 <body>
 <div class="container">
-  <h2>🚀 Export Per Date — MCLOGI HAULING PLAN</h2>
+  <h2>🚀 Export Per Date — Control Panel</h2>
 
   <label>Upload Excel File</label>
   <input id="file" type="file" accept=".xls,.xlsx">
@@ -56,7 +56,7 @@
   </div>
 
   <div class="note">
-    Note: Sheet names follow <code>MM_DD_YYYY</code>. Log shows <code>MM_DD_YYYY = count</code>.
+    Note: Sheet names follow <code>MM_DD_YYYY</code>. Log shows <code>MM_DD_YYYY = batch / index14</code>.
   </div>
 </div>
 
@@ -192,6 +192,7 @@ btnRun.addEventListener('click', async () => {
 
     const outWB = XLSX.utils.book_new();
     const batchCounts = {};
+    const index14Counts = {};
 
     const forceCols = [1,18,19,20,31,32,33];
 
@@ -227,19 +228,28 @@ btnRun.addEventListener('click', async () => {
 
       const aoa = XLSX.utils.sheet_to_json(wsOut,{header:1,defval:''});
       const exportedBody = aoa.slice(5);
+
       const uniq = new Set();
+      let idx14 = 0;
+
       exportedBody.forEach(r=>{
-        const v=(r[16] ?? '').toString().trim();
-        if(v) uniq.add(v);
+        const b=(r[16] ?? '').toString().trim();
+        const i14=(r[13] ?? '').toString().trim();
+        if(b) uniq.add(b);
+        if(i14) idx14++;
       });
+
       batchCounts[sheetName] = uniq.size;
+      index14Counts[sheetName] = idx14;
 
       sheetIndex++;
       setProgress(Math.floor(sheetIndex/allDateKeys.length*100));
     }
 
-    setLog('Batch Counts:');
-    Object.keys(batchCounts).sort().forEach(sn=>setLog(`${sn} = ${batchCounts[sn]}`));
+    setLog('Trips / Units:');
+    Object.keys(batchCounts).sort().forEach(sn=>{
+      setLog(`${sn} = ${batchCounts[sn]} / ${index14Counts[sn]}`);
+    });
 
     processedWB = outWB;
     btnDownload.disabled = false;
@@ -264,23 +274,7 @@ btnDownload.addEventListener('click', () => {
   XLSX.writeFile(processedWB,'Export_PerDate_Styled.xlsx');
   setLog('📦 Export_PerDate_Styled.xlsx saved.');
 });
-
-
 </script>
+
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
