@@ -23,9 +23,33 @@
   .logClickable { cursor:pointer; color:#00d5ff; text-decoration:underline; }
   .logClickable:hover { color:#7fffd4; }
   .note { margin-top:10px; color:#9fd9ff; font-size:13px; }
+
+  /* ---- VTS BUTTON (ADD ONLY) ---- */
+  .vts-btn {
+    position: fixed;
+    top: 14px;
+    right: 18px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 8px;
+    background: linear-gradient(135deg,#00ffd0,#0070ff);
+    color: #04121a;
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+    z-index: 9999;
+  }
+  .vts-btn:hover { opacity: 0.9; }
 </style>
 </head>
+
 <body>
+
+<!-- VTS BUTTON -->
+<a class="vts-btn" href="https://pauloisip123.github.io/buyoff" target="_blank">
+  VTS
+</a>
+
 <div class="container">
   <h2>🚀 Export Per Date — MCLOGI</h2>
 
@@ -68,7 +92,7 @@ const logEl = document.getElementById('logOutput');
 const setLog = s => { logEl.innerHTML += '\n'+s; logEl.scrollTop = logEl.scrollHeight; };
 const clearLog = () => { logEl.textContent = ''; };
 let processedWB = null;
-let storedSheets = {}; // <---- for clickable popup lookup
+let storedSheets = {};
 
 const setProgress = p => {
   const el = document.getElementById('progress-bar');
@@ -76,7 +100,7 @@ const setProgress = p => {
   el.textContent = p+'%';
 };
 
-/* --- PARSE DATE FUNCTIONS (same as original) --- */
+/* --- PARSE DATE FUNCTIONS --- */
 const parseU = v => {
   if(v == null || v === '') return null;
   if(v instanceof Date) return v;
@@ -142,7 +166,6 @@ document.getElementById('run').addEventListener('click', async () => {
   setProgress(0);
 
   try {
-    /* READ */
     const data = await fileInput.files[0].arrayBuffer();
     const wb = XLSX.read(data, { type:'array' });
     const ws = wb.Sheets[wb.SheetNames[0]];
@@ -173,7 +196,6 @@ document.getElementById('run').addEventListener('click', async () => {
     let processed = 0;
     const keys = Object.keys(batchGroups);
 
-    /* ---------------- CUTOFF LOGIC ---------------- */
     for(const batchKey of keys){
       const items = batchGroups[batchKey];
       const parsed = items.map(it=>({ ...it, dt:parseU(it.rawU) }))
@@ -196,17 +218,15 @@ document.getElementById('run').addEventListener('click', async () => {
       processed++;
       setProgress(Math.floor(processed/keys.length*100));
     }
-    /* ----------------------------------------------- */
 
     const allDates = Object.keys(dateGroups).sort();
     if(allDates.length===0) throw 'No rows matched the date range';
 
     processedWB = XLSX.utils.book_new();
-    storedSheets = {}; // reset for clickable logs
+    storedSheets = {};
 
     const batchCounts = {};
     const index14Counts = {};
-
     const forceCols=[1,18,19,20,31,32,33];
 
     let si = 0;
@@ -235,14 +255,11 @@ document.getElementById('run').addEventListener('click', async () => {
 
       const finalData = headers.concat(allRows);
       const wsOut = XLSX.utils.aoa_to_sheet(finalData);
-
       const sheetName = makeSheetNameFromDate(sheetDates[dateKey]);
       XLSX.utils.book_append_sheet(processedWB, wsOut, sheetName);
 
-      /* store for clickable popup */
       storedSheets[sheetName] = XLSX.utils.sheet_to_json(wsOut,{header:1,defval:''});
 
-      /* COUNTING */
       const aoa = storedSheets[sheetName];
       const exportedBody = aoa.slice(5);
 
@@ -263,24 +280,19 @@ document.getElementById('run').addEventListener('click', async () => {
       setProgress(Math.floor(si/allDates.length*100));
     }
 
-    /* ---------------- LOG OUTPUT (CLICKABLE) ---------------- */
     setLog('Trips / Units:');
-
     Object.keys(batchCounts).sort().forEach(sn=>{
       logEl.innerHTML +=
         `\n<span class="logClickable" onclick="showDetails('${sn}')">${sn} = ${batchCounts[sn]} / ${index14Counts[sn]}</span>`;
     });
 
-    processedWB = processedWB;
     document.getElementById('download').disabled=false;
     setProgress(100);
     setLog('\n✅ DONE. You may now click DOWNLOAD.');
   }
-
   catch(err){
     setLog('\n⚠ ERROR: '+err);
   }
-
   finally {
     btnRun.disabled=false;
     btnRun.classList.remove('running');
@@ -288,16 +300,12 @@ document.getElementById('run').addEventListener('click', async () => {
   }
 });
 
-/* -------------------- CLICK POPUP LOGIC -------------------- */
 function showDetails(sheetName){
-
   const aoa = storedSheets[sheetName];
   if(!aoa) return alert("No sheet data.");
-
   const body = aoa.slice(5);
 
   let uniqueQ = [...new Set(body.map(r => (r[16]??'').toString().trim()).filter(x=>x))];
-
   let results = {};
 
   uniqueQ.forEach(qVal=>{
@@ -327,7 +335,6 @@ function showDetails(sheetName){
   alert(msg);
 }
 
-/* -------------------- DOWNLOAD -------------------- */
 document.getElementById('download').addEventListener('click', () => {
   if(!processedWB) return alert('Run first.');
   XLSX.writeFile(processedWB,'Export_PerDate_Styled.xlsx');
