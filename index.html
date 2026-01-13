@@ -151,7 +151,6 @@ const makeSheetNameFromDate = dt => {
 
 /* ---------- RUN ---------- */
 document.getElementById('run').addEventListener('click', async () => {
-
   const fileInput = document.getElementById('file');
   if(!fileInput.files[0]) return alert('Select Excel file');
   const sv = document.getElementById('start').value;
@@ -169,7 +168,6 @@ document.getElementById('run').addEventListener('click', async () => {
   setProgress(0);
 
   try {
-
     const data = await fileInput.files[0].arrayBuffer();
     const wb = XLSX.read(data,{type:'array'});
     const ws = wb.Sheets[wb.SheetNames[0]];
@@ -201,7 +199,6 @@ document.getElementById('run').addEventListener('click', async () => {
 
     /* Apply cutoff logic */
     for(const q of keys){
-
       const items=batchGroups[q];
       const parsed=items.map(i=>({ ...i, dt:parseU(i.rawU) })).filter(p=>p.dt);
 
@@ -294,52 +291,38 @@ document.getElementById('run').addEventListener('click', async () => {
 
 });
 
-/* ---------- POPUP (Updated with Supplier Merge Logic) ---------- */
+/* ---------- POPUP (Supplier Merge + Unique Batch Count) ---------- */
 function showDetails(sn){
-
   const aoa = storedSheets[sn];
   if(!aoa) return alert("No data.");
-
   const body = aoa.slice(5);
 
-  /* STEP 1 — Group rows by Column Q */
-  let groups={};  
+  // Step 1: group by batch (col Q)
+  let groups={};
   body.forEach(r=>{
     let q=(r[16]||'').toString().trim();
     if(!q) return;
-
     let supplier = (r[3]||'').toString().trim();
     if(!groups[q]) groups[q]={ suppliers:new Set(), count:0 };
-
     if(supplier) groups[q].suppliers.add(supplier);
     groups[q].count++;
   });
 
-  /* STEP 2 — Merge suppliers properly */
-  let merged = {}; // supplierKey → totalCount
-
+  // Step 2: merge suppliers & count unique batch groups per supplier
+  let merged = {}; // supplierKey -> { total: X, uniqueBatch: Y }
   Object.keys(groups).forEach(q=>{
     let g = groups[q];
     let supplierList = [...g.suppliers];
-
-    if (supplierList.length > 1) {
-      // combine suppliers inside SAME batch group
-      let key = supplierList.join(" / ");
-      if(!merged[key]) merged[key] = 0;
-      merged[key] += g.count;
-    } else {
-      // only one supplier in batch group
-      let key = supplierList[0];
-      if(!merged[key]) merged[key] = 0;
-      merged[key] += g.count;
-    }
+    let key = supplierList.length>1 ? supplierList.join(" / ") : supplierList[0];
+    if(!merged[key]) merged[key]={ total:0, uniqueBatches:0 };
+    merged[key].total += g.count;
+    merged[key].uniqueBatches += 1;
   });
 
-  /* STEP 3 — Output */
+  // Step 3: Output
   let html = `<b>${sn}</b><br><br>`;
-
   Object.keys(merged).forEach(k=>{
-    html += `${k} = ${merged[k]}<br>`;
+    html += `${k} = ${merged[k].total} / ${merged[k].uniqueBatches}<br>`;
   });
 
   modalBox.innerHTML = html;
