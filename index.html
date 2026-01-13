@@ -96,9 +96,7 @@
 <body>
 
 <div class="container">
-  <!-- HOME PAGE VTS BUTTON -->
   <button id="vtsHomeBtn" onclick="window.open('https://pauloisip123.github.io/buyoff/', '_blank')">VTS</button>
-
   <h2>🚀 Export Per Date — MCLOGI</h2>
 
   <label>Upload Excel File</label>
@@ -134,273 +132,157 @@
   </div>
 </div>
 
-<!-- POPUP -->
 <div id="modalBg">
   <div id="modalBox"></div>
 </div>
 
 <script>
-/* Globals */
 const logEl = document.getElementById('logOutput');
 const setLog = s => { logEl.innerHTML += '\n'+s; logEl.scrollTop = logEl.scrollHeight; };
 const clearLog = () => { logEl.textContent = ''; };
 let processedWB = null;
-let storedSheets = {}; // for popup
+let storedSheets = {};
+const setProgress = p => { const el = document.getElementById('progress-bar'); el.style.width = p+'%'; el.textContent = p+'%'; };
 
-const setProgress = p => {
-  const el = document.getElementById('progress-bar');
-  el.style.width = p+'%';
-  el.textContent = p+'%';
-};
+const parseU = v => { if(v==null||v==='') return null; if(v instanceof Date) return v; if(typeof v==='number'){ const d=XLSX.SSF.parse_date_code(v); if(d) return new Date(d.y,d.m-1,d.d,d.H,d.M,d.S);} if(typeof v==='string'){ const s=v.trim(); let m=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/); if(m) return new Date(m[3],m[1]-1,m[2],m[4],m[5]); m=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); if(m) return new Date(m[3],m[1]-1,m[2]); const d=new Date(s); if(!isNaN(d)) return d;} return null;};
+const formatTextDate = dt => { if(!dt||isNaN(dt)) return ''; const mm=String(dt.getMonth()+1).padStart(2,'0'); const dd=String(dt.getDate()).padStart(2,'0'); const yyyy=dt.getFullYear(); const hh=String(dt.getHours()).padStart(2,'0'); const mi=String(dt.getMinutes()).padStart(2,'0'); return `${mm}/${dd}/${yyyy} ${hh}:${mi}`;};
+const forceDateText = v => { const d=parseU(v); if(!d||isNaN(d)) return v??''; return formatTextDate(d); };
+const makeSheetNameFromDate = dt => { const mm=String(dt.getMonth()+1).padStart(2,'0'); const dd=String(dt.getDate()).padStart(2,'0'); const yyyy=dt.getFullYear(); return `${mm}_${dd}_${yyyy}`; };
 
-/* Parse date */
-const parseU = v => {
-  if(v == null || v === '') return null;
-  if(v instanceof Date) return v;
-  if(typeof v === 'number'){
-    const d = XLSX.SSF.parse_date_code(v);
-    if(d) return new Date(d.y,d.m-1,d.d,d.H,d.M,d.S);
-  }
-  if(typeof v === 'string'){
-    const s = v.trim();
-    let m = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/);
-    if(m) return new Date(m[3],m[1]-1,m[2],m[4],m[5]);
-    m = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-    if(m) return new Date(m[3],m[1]-1,m[2]);
-    const d = new Date(s);
-    if(!isNaN(d)) return d;
-  }
-  return null;
-};
-const formatTextDate = dt => {
-  if(!dt || isNaN(dt)) return '';
-  const mm = String(dt.getMonth()+1).padStart(2,'0');
-  const dd = String(dt.getDate()).padStart(2,'0');
-  const yyyy = dt.getFullYear();
-  const hh = String(dt.getHours()).padStart(2,'0');
-  const mi = String(dt.getMinutes()).padStart(2,'0');
-  return `${mm}/${dd}/${yyyy} ${hh}:${mi}`;
-};
-const forceDateText = v => {
-  const d = parseU(v);
-  if(!d || isNaN(d)) return v ?? '';
-  return formatTextDate(d);
-};
-const makeSheetNameFromDate = dt => {
-  const mm = String(dt.getMonth()+1).padStart(2,'0');
-  const dd = String(dt.getDate()).padStart(2,'0');
-  const yyyy = dt.getFullYear();
-  return `${mm}_${dd}_${yyyy}`;
-};
-
-/* ---------- RUN ---------- */
 document.getElementById('run').addEventListener('click', async () => {
-  const fileInput = document.getElementById('file');
+  const fileInput=document.getElementById('file');
   if(!fileInput.files[0]) return alert('Select Excel file');
-  const sv = document.getElementById('start').value;
-  const ev = document.getElementById('end').value;
-  if(!sv || !ev) return alert('Select start and end date');
+  const sv=document.getElementById('start').value;
+  const ev=document.getElementById('end').value;
+  if(!sv||!ev) return alert('Select start and end date');
 
-  const btnRun = document.getElementById('run');
-  const btnDownload = document.getElementById('download');
-
+  const btnRun=document.getElementById('run');
+  const btnDownload=document.getElementById('download');
   btnRun.disabled=true; btnRun.classList.add('running'); btnRun.textContent='Processing...';
   btnDownload.disabled=true;
+  clearLog(); setLog('Reading file...'); setProgress(0);
 
-  clearLog();
-  setLog('Reading file...');
-  setProgress(0);
-
-  try {
-    const data = await fileInput.files[0].arrayBuffer();
-    const wb = XLSX.read(data,{type:'array'});
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-
-    if(rows.length < 6) throw 'Excel must have at least 6 rows';
-
-    const headers = rows.slice(0,4);
-    const body = rows.slice(4);
-
-    const colQ = 16;
-    const colU = 20;
-
+  try{
+    const data=await fileInput.files[0].arrayBuffer();
+    const wb=XLSX.read(data,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+    if(rows.length<6) throw 'Excel must have at least 6 rows';
+    const headers=rows.slice(0,4);
+    const body=rows.slice(4);
+    const colQ=16; const colU=20;
     let batchGroups={};
-    body.forEach(r=>{
-      let key=(r[colQ]||'').toString().trim();
-      let rawU=r[colU];
-      if(!batchGroups[key]) batchGroups[key]=[];
-      batchGroups[key].push({row:r, rawU});
-    });
-
-    const startDate = new Date(sv+'T00:00:00');
-    const endDate   = new Date(ev+'T23:59:59');
-    const dateMap={};
-    const realDate={};
-
-    let processed=0;
-    const keys=Object.keys(batchGroups);
-
-    /* Apply cutoff logic */
+    body.forEach(r=>{ let key=(r[colQ]||'').toString().trim(); let rawU=r[colU]; if(!batchGroups[key]) batchGroups[key]=[]; batchGroups[key].push({row:r,rawU});});
+    const startDate=new Date(sv+'T00:00:00'); const endDate=new Date(ev+'T23:59:59');
+    const dateMap={}; const realDate={};
+    let processed=0; const keys=Object.keys(batchGroups);
     for(const q of keys){
       const items=batchGroups[q];
-      const parsed=items.map(i=>({ ...i, dt:parseU(i.rawU) })).filter(p=>p.dt);
-
-      if(parsed.length===0){ processed++; continue; }
-
-      let minDate = new Date(Math.min(...parsed.map(p=>p.dt.getTime())));
-      if(minDate.getHours() < 19) minDate.setDate(minDate.getDate()-1);
+      const parsed=items.map(i=>({...i,dt:parseU(i.rawU)})).filter(p=>p.dt);
+      if(parsed.length===0){processed++; continue;}
+      let minDate=new Date(Math.min(...parsed.map(p=>p.dt.getTime())));
+      if(minDate.getHours()<19) minDate.setDate(minDate.getDate()-1);
       minDate.setHours(0,0,0,0);
-
       if(minDate>=startDate && minDate<=endDate){
         const id=minDate.toISOString().slice(0,10);
         if(!dateMap[id]) dateMap[id]={};
-        dateMap[id][q]=parsed;
-        realDate[id]=minDate;
+        dateMap[id][q]=parsed; realDate[id]=minDate;
       }
-
-      processed++;
-      setProgress(Math.floor(processed/keys.length*100));
+      processed++; setProgress(Math.floor(processed/keys.length*100));
     }
 
     const allDates=Object.keys(dateMap).sort();
     if(!allDates.length) throw 'No date matched the cutoff';
-
-    processedWB = XLSX.utils.book_new();
+    processedWB=XLSX.utils.book_new();
     storedSheets={};
-
     let batchCount={}, index14Count={};
-
     let dIndex=0;
     for(const dk of allDates){
-
       let all=[];
-      const byBatch = dateMap[dk];
-      const batchKeys = Object.keys(byBatch).sort();
-
+      const byBatch=dateMap[dk];
+      const batchKeys=Object.keys(byBatch).sort();
       for(const q of batchKeys){
         all.push([`BATCH: ${q}`]);
-        let sorted = byBatch[q].slice().sort((a,b)=>a.dt-b.dt);
+        let sorted=byBatch[q].slice().sort((a,b)=>a.dt-b.dt);
         sorted.forEach(e=>{
           let rc=e.row.slice();
           [1,18,19,20,31,32,33].forEach(ci=>rc[ci]=forceDateText(rc[ci]));
-          if(rc[20]){ let d=parseU(rc[20]); if(d) rc[20]=formatTextDate(d); }
+          if(rc[20]){ let d=parseU(rc[20]); if(d) rc[20]=formatTextDate(d);}
           all.push(rc);
         });
       }
-
-      let finalData = headers.concat(all);
-      let outWs = XLSX.utils.aoa_to_sheet(finalData);
-      let name = makeSheetNameFromDate(realDate[dk]);
+      let finalData=headers.concat(all);
+      let outWs=XLSX.utils.aoa_to_sheet(finalData);
+      let name=makeSheetNameFromDate(realDate[dk]);
       XLSX.utils.book_append_sheet(processedWB,outWs,name);
-
-      storedSheets[name] = XLSX.utils.sheet_to_json(outWs,{header:1,defval:''});
-
-      let body2 = storedSheets[name].slice(5);
-
-      /* Count unique batch + index 14 */
-      let uniqQ = new Set();
-      let ix14 = 0;
-
-      body2.forEach(r=>{
-        let q=(r[16]||'').toString().trim();
-        if(q) uniqQ.add(q);
-        if(r[13]) ix14++;
-      });
-
-      batchCount[name]=uniqQ.size;
-      index14Count[name]=ix14;
-
-      dIndex++;
-      setProgress(Math.floor(dIndex/allDates.length*100));
+      storedSheets[name]=XLSX.utils.sheet_to_json(outWs,{header:1,defval:''});
+      let body2=storedSheets[name].slice(5);
+      let uniqQ=new Set(); let ix14=0;
+      body2.forEach(r=>{let q=(r[16]||'').toString().trim(); if(q) uniqQ.add(q); if(r[13]) ix14++;});
+      batchCount[name]=uniqQ.size; index14Count[name]=ix14;
+      dIndex++; setProgress(Math.floor(dIndex/allDates.length*100));
     }
 
-    /* LOG OUTPUT */
     setLog('Trips / Units:');
     Object.keys(batchCount).sort().forEach(n=>{
-      logEl.innerHTML += `\n<span class="logClickable" onclick="showDetails('${n}')">${n} = ${batchCount[n]} / ${index14Count[n]}</span>`;
+      logEl.innerHTML+=`\n<span class="logClickable" onclick="showDetails('${n}')">${n} = ${batchCount[n]} / ${index14Count[n]}</span>`;
     });
 
     btnDownload.disabled=false;
     setProgress(100);
     setLog('\nDONE.');
 
-  } catch(err){
-    setLog('\nERROR: '+err);
-  } finally {
-    btnRun.disabled=false;
-    btnRun.classList.remove('running');
-    btnRun.textContent='Run';
-  }
-
+  }catch(err){ setLog('\nERROR: '+err); }finally{ btnRun.disabled=false; btnRun.classList.remove('running'); btnRun.textContent='Run';}
 });
 
-/* ---------- POPUP ---------- */
 function showDetails(sn){
-  const aoa = storedSheets[sn];
+  const aoa=storedSheets[sn];
   if(!aoa) return alert("No data.");
-  const body = aoa.slice(5);
-
-  // group by batch (col Q)
+  const body=aoa.slice(5);
   let groups={};
   body.forEach(r=>{
     let q=(r[16]||'').toString().trim();
     if(!q) return;
-    let supplier = (r[3]||'').toString().trim();
+    // Use AO (25) if exists, else fallback D (3)
+    let supplier=r[24]?r[24].toString().trim():(r[3]||'').toString().trim();
     if(!groups[q]) groups[q]={ suppliers:new Set(), count:0 };
     if(supplier) groups[q].suppliers.add(supplier);
     groups[q].count++;
   });
 
-  // merge suppliers & count unique batch groups
-  let merged = {};
+  let merged={};
   Object.keys(groups).forEach(q=>{
-    let g = groups[q];
-    let supplierList = [...g.suppliers];
-    let key = supplierList.length>1 ? supplierList.join(" / ") : supplierList[0];
-    if(!merged[key]) merged[key]={ total:0, uniqueBatches:0 };
-    merged[key].total += g.count;
-    merged[key].uniqueBatches += 1;
+    let g=groups[q];
+    let supplierList=[...g.suppliers];
+    let key=supplierList.length>1 ? supplierList.join(" / "):supplierList[0];
+    if(!merged[key]) merged[key]={total:0, uniqueBatches:0};
+    merged[key].total+=g.count;
+    merged[key].uniqueBatches+=1;
   });
 
-  // count exported files in row6 colG BEFORE removing duplicates
-  let exportCounts = {};
-  body.forEach(r=>{
-    let val = r[6];
-    if(val){
-      exportCounts[val] = (exportCounts[val] || 0) + 1;
-    }
-  });
+  let exportCounts={};
+  body.forEach(r=>{ let val=r[6]; if(val) exportCounts[val]=(exportCounts[val]||0)+1; });
 
-  // HTML output
-  let html = `<button class="vtsBtn" onclick="window.open('https://pauloisip123.github.io/buyoff/','_blank')">VTS</button>`;
-  html += `<b>${sn}</b><br><br>`;
+  let html=`<button class="vtsBtn" onclick="window.open('https://pauloisip123.github.io/buyoff/','_blank')">VTS</button>`;
+  html+=`<b>${sn}</b><br><br>`;
   Object.keys(merged).forEach(k=>{
-    html += `${k} = ${merged[k].uniqueBatches} / ${merged[k].total}<br>`;
+    html+=`${k} = ${merged[k].uniqueBatches} / ${merged[k].total}<br>`;
   });
-
-  html += `<br><b>FOR BUYOFF</b><br>`;
-  Object.keys(exportCounts).forEach(k=>{
-    html += `${k} = ${exportCounts[k]}<br>`;
-  });
-
-  modalBox.innerHTML = html;
+  html+=`<br><b>FOR BUYOFF</b><br>`;
+  Object.keys(exportCounts).forEach(k=>{ html+=`${k} = ${exportCounts[k]}<br>`; });
+  modalBox.innerHTML=html;
   modalBg.style.display='flex';
 }
 
-const modalBg = document.getElementById("modalBg");
-const modalBox = document.getElementById("modalBox");
-modalBg.addEventListener('click', e=>{
-  if(e.target===modalBg) modalBg.style.display='none';
-});
+const modalBg=document.getElementById("modalBg");
+const modalBox=document.getElementById("modalBox");
+modalBg.addEventListener('click',e=>{if(e.target===modalBg) modalBg.style.display='none';});
 
-/* ---------- DOWNLOAD ---------- */
 document.getElementById('download').addEventListener('click',()=>{
   if(!processedWB) return alert("Run first.");
   XLSX.writeFile(processedWB,"Export_PerDate_Styled.xlsx");
   setLog('\nExported.');
 });
 </script>
-
 </body>
 </html>
