@@ -6,8 +6,8 @@
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
 <style>
-  body { font-family:'Segoe UI',sans-serif; background:#0a0b15; color:#e0e0e0; display:flex; justify-content:center; padding:18px; }
-  .container { width:95%; max-width:1100px; background:#101126; padding:24px; border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,0.7); }
+  body { font-family:'Segoe UI',sans-serif; background:#0a0b15; color:#e0e0e0; display:flex; justify-content:center; padding:18px; position:relative;}
+  .container { width:95%; max-width:1100px; background:#101126; padding:24px; border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,0.7); position:relative; }
   h2 { text-align:center; color:#00ffd0; text-shadow:0 0 8px #00ffd0; margin-top:0; }
   label { display:block; margin-top:8px; color:#bfefff; }
   input[type="file"], input[type="date"] { width:100%; padding:10px; margin-top:6px; margin-bottom:6px; border-radius:8px; border:none; background:#1a1b2a; color:#e6f9ff; }
@@ -33,28 +33,72 @@
     align-items:center; 
     justify-content:center;
     animation: fadeIn .25s ease;
+    z-index:9999;
   }
   @keyframes fadeIn { from{ opacity:0 } to{ opacity:1 } }
   #modalBox {
     background:#ffffff;
     color:#000;
-    padding:26px;
+    padding:26px 16px 16px 16px;
     border-radius:10px;
-    width:420px;
+    width:700px;          
     max-width:90%;
-    font-size:16px;
+    max-height:80vh;      
+    font-size:18px;       
     box-shadow:0 12px 40px rgba(0,0,0,0.7);
     animation: pop .25s ease;
+    overflow-y:auto;      
+    position:relative;    
   }
   @keyframes pop { 
     from{ transform:scale(.85); opacity:0 } 
     to{ transform:scale(1); opacity:1 } 
+  }
+  #modalBox .vtsBtn {
+    position:absolute;
+    top:8px;
+    right:8px;
+    padding:4px 8px;
+    font-size:12px;
+    background:#0070ff;
+    color:#fff;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    box-shadow:0 3px 8px rgba(0,0,0,0.3);
+  }
+  #modalBox .vtsBtn:hover {
+    background:#00d5ff;
+    color:#000;
+  }
+
+  /* HOME PAGE VTS BUTTON */
+  #vtsHomeBtn {
+    position:absolute;
+    top:18px;
+    right:18px;
+    padding:6px 12px;
+    font-size:14px;
+    background:#0070ff;
+    color:#fff;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    box-shadow:0 3px 8px rgba(0,0,0,0.3);
+    z-index:10;
+  }
+  #vtsHomeBtn:hover {
+    background:#00d5ff;
+    color:#000;
   }
 </style>
 </head>
 <body>
 
 <div class="container">
+  <!-- HOME PAGE VTS BUTTON -->
+  <button id="vtsHomeBtn" onclick="window.open('https://pauloisip123.github.io/buyoff/', '_blank')">VTS</button>
+
   <h2>🚀 Export Per Date — MCLOGI</h2>
 
   <label>Upload Excel File</label>
@@ -291,13 +335,13 @@ document.getElementById('run').addEventListener('click', async () => {
 
 });
 
-/* ---------- POPUP (Supplier Merge + Unique Batch Count) ---------- */
+/* ---------- POPUP ---------- */
 function showDetails(sn){
   const aoa = storedSheets[sn];
   if(!aoa) return alert("No data.");
   const body = aoa.slice(5);
 
-  // Step 1: group by batch (col Q)
+  // group by batch (col Q)
   let groups={};
   body.forEach(r=>{
     let q=(r[16]||'').toString().trim();
@@ -308,8 +352,8 @@ function showDetails(sn){
     groups[q].count++;
   });
 
-  // Step 2: merge suppliers & count unique batch groups per supplier
-  let merged = {}; // supplierKey -> { total: X, uniqueBatch: Y }
+  // merge suppliers & count unique batch groups
+  let merged = {};
   Object.keys(groups).forEach(q=>{
     let g = groups[q];
     let supplierList = [...g.suppliers];
@@ -319,10 +363,25 @@ function showDetails(sn){
     merged[key].uniqueBatches += 1;
   });
 
-  // Step 3: Output
-  let html = `<b>${sn}</b><br><br>`;
+  // count exported files in row6 colG BEFORE removing duplicates
+  let exportCounts = {};
+  body.forEach(r=>{
+    let val = r[6];
+    if(val){
+      exportCounts[val] = (exportCounts[val] || 0) + 1;
+    }
+  });
+
+  // HTML output
+  let html = `<button class="vtsBtn" onclick="window.open('https://pauloisip123.github.io/buyoff/','_blank')">VTS</button>`;
+  html += `<b>${sn}</b><br><br>`;
   Object.keys(merged).forEach(k=>{
-    html += `${k} = ${merged[k].total} / ${merged[k].uniqueBatches}<br>`;
+    html += `${k} = ${merged[k].uniqueBatches} / ${merged[k].total}<br>`;
+  });
+
+  html += `<br><b>FOR BUYOFF</b><br>`;
+  Object.keys(exportCounts).forEach(k=>{
+    html += `${k} = ${exportCounts[k]}<br>`;
   });
 
   modalBox.innerHTML = html;
