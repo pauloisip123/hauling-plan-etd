@@ -44,7 +44,7 @@
   .logClickable { cursor:pointer; color:#00d5ff; text-decoration:underline; }
   .logClickable:hover { color:#7fffd4; }
 
-  /* MODAL STYLING (THE CORRECT LOOK) */
+  /* MODAL STYLING */
   #modalBg { 
     position:fixed; inset:0; 
     background:rgba(0,0,0,0.65); 
@@ -67,7 +67,7 @@
     overflow-y:auto;      
     position:relative;    
   }
-  #modalBox .vtsBtn {
+  .vtsBtn {
     position:absolute;
     top:8px;
     right:8px;
@@ -278,7 +278,7 @@ document.getElementById('run').addEventListener('click', async () => {
 
     processedWB=XLSX.utils.book_new();
     storedSheets={};
-    const batchCount={}, index14Count={};
+    const batchCount={}, index8Count={};
     let dIndex=0;
 
     for(const dk of allDates){
@@ -300,21 +300,26 @@ document.getElementById('run').addEventListener('click', async () => {
       XLSX.utils.book_append_sheet(processedWB, outWs, name);
       storedSheets[name]=XLSX.utils.sheet_to_json(outWs,{header:1,defval:''});
       let body2=storedSheets[name].slice(5);
-      let uniqQ=new Set(), ix14=0;
-      body2.forEach(r=>{ let q=(r[16]||'').toString().trim(); if(q) uniqQ.add(q); if(r[13]) ix14++; });
+      let uniqQ=new Set(), ix8=0;
+      body2.forEach(r=>{ 
+        let q=(r[16]||'').toString().trim(); 
+        if(q) uniqQ.add(q); 
+        if(r[7]) ix8++; // INDEX 8 (Column I)
+      });
       batchCount[name]=uniqQ.size;
-      index14Count[name]=ix14;
+      index8Count[name]=ix8;
       dIndex++; setProgress(Math.floor(dIndex/allDates.length*100));
     }
     setLog('Trips / Units:');
-    Object.keys(batchCount).sort().forEach(n=>{ logEl.innerHTML+=`\n<span class="logClickable" onclick="showDetails('${n}')">${n} = ${batchCount[n]} / ${index14Count[n]}</span>`; });
+    Object.keys(batchCount).sort().forEach(n=>{ 
+      logEl.innerHTML+=`\n<span class="logClickable" onclick="showDetails('${n}')">${n} = ${batchCount[n]} / ${index8Count[n]}</span>`; 
+    });
     btnDownload.disabled=false;
     setLog('\nDONE.');
   }catch(err){ setLog('\nERROR: '+err); }
   finally{ btnRun.disabled=false; btnRun.classList.remove('running'); btnRun.textContent='Run'; }
 });
 
-// --- THE RESTORED SHOW DETAILS FUNCTION ---
 function showDetails(sn){
   const aoa = storedSheets[sn];
   if(!aoa) return alert("No data.");
@@ -370,4 +375,3 @@ document.getElementById('download').addEventListener('click',()=>{
 </script>
 </body>
 </html>
-
