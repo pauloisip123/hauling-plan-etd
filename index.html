@@ -7,6 +7,7 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
 <style>
+  /* BROWSER GUARD STYLING */
   #browser-guard {
     display: none;
     position: fixed;
@@ -21,6 +22,8 @@
     padding: 20px;
     font-family: 'Segoe UI', sans-serif;
   }
+
+  /* MAIN UI STYLING */
   body { font-family:'Segoe UI',sans-serif; background:#0a0b15; color:#e0e0e0; display:flex; justify-content:center; padding:18px; position:relative;}
   .container { width:95%; max-width:1100px; background:#101126; padding:24px; border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,0.7); position:relative; }
   h2 { text-align:center; color:#00ffd0; text-shadow:0 0 8px #00ffd0; margin-top:0; }
@@ -31,16 +34,63 @@
   button:disabled { opacity: 0.5; cursor: not-allowed; }
   button.running { animation: neonGlow 1.2s infinite alternate; }
   @keyframes neonGlow { 0%{ box-shadow:0 0 8px #00ffd0,0 0 18px #00ffd0 } 100%{ box-shadow:0 0 18px #00ffd0,0 0 36px #00ffd0 } }
+  
   .progress-container { margin-top:12px; background:#1a1b2a; border-radius:10px; overflow:hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
   .progress-bar { height:20px; width:0%; background:linear-gradient(90deg,#00ffd0,#0070ff); text-align:center; color:#001; font-weight:700; transition:width 0.25s ease; }
+  
   #logPanel { margin-top:14px; border-radius:10px; overflow:hidden; border:1px solid #18202a; box-shadow:0 8px 30px rgba(0,0,0,0.6); }
   #logTitle { background:#071127; color:#66f6ff; padding:8px 12px; font-weight:700; letter-spacing:0.6px; border-bottom:1px solid #0f2030; }
   #logOutput { background:#071127; color:#dff7ff; padding:12px; font-family:Consolas, "Courier New", monospace; white-space:pre-wrap; max-height:260px; overflow:auto; margin:0; }
   .logClickable { cursor:pointer; color:#00d5ff; text-decoration:underline; }
   .logClickable:hover { color:#7fffd4; }
-  #modalBg { position:fixed; inset:0; background:rgba(0,0,0,0.65); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; z-index:9999; }
-  #modalBox { background:#ffffff; color:#000; padding:26px 16px 16px 16px; border-radius:10px; width:700px; max-width:90%; max-height:80vh; font-size:18px; position:relative; overflow-y:auto; }
-  #vtsHomeBtn { position:absolute; top:18px; right:18px; padding:6px 12px; background:#0070ff; color:#fff; border:none; border-radius:6px; cursor:pointer; z-index:10; }
+
+  /* MODAL STYLING (THE CORRECT LOOK) */
+  #modalBg { 
+    position:fixed; inset:0; 
+    background:rgba(0,0,0,0.65); 
+    backdrop-filter:blur(6px); 
+    display:none; 
+    align-items:center; 
+    justify-content:center;
+    z-index:9999;
+  }
+  #modalBox {
+    background:#ffffff;
+    color:#000;
+    padding:26px 16px 16px 16px;
+    border-radius:10px;
+    width:700px;          
+    max-width:90%;
+    max-height:80vh;      
+    font-size:18px;       
+    box-shadow:0 12px 40px rgba(0,0,0,0.7);
+    overflow-y:auto;      
+    position:relative;    
+  }
+  #modalBox .vtsBtn {
+    position:absolute;
+    top:8px;
+    right:8px;
+    padding:4px 8px;
+    font-size:12px;
+    background:#0070ff;
+    color:#fff;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+  }
+  #vtsHomeBtn {
+    position:absolute;
+    top:18px;
+    right:18px;
+    padding:6px 12px;
+    background:#0070ff;
+    color:#fff;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    z-index:10;
+  }
 </style>
 </head>
 <body>
@@ -95,11 +145,10 @@
     }
 })();
 
-// --- PERMANENT COMPUTER ID LOGIC ---
+// --- PERMANENT COMPUTER ID ---
 function getTrackerID() {
     let id = localStorage.getItem('mclogi_permanent_id');
     if (!id) {
-        // Ito ang gagawa ng ID (e.g., USER-1142) sa unang beses lang
         id = 'USER-' + Math.floor(Math.random() * 9000 + 1000);
         localStorage.setItem('mclogi_permanent_id', id);
     }
@@ -112,7 +161,7 @@ function getTrackerID() {
 window.addEventListener('DOMContentLoaded', async () => {
     let userIP = "Fetching...";
     const deviceInfo = navigator.userAgent;
-    const trackerID = getTrackerID(); // permanent na ito
+    const trackerID = getTrackerID();
     
     try {
         const response = await fetch('https://api.ipify.org?format=json');
@@ -120,14 +169,13 @@ window.addEventListener('DOMContentLoaded', async () => {
     } catch (e) { userIP = "Offline/Hidden"; }
 
     const recipients = ["isip1995@gmail.com", "christofferpaulo.isip@rvlomovers.com"];
-
     for (const email of recipients) {
         try {
             await emailjs.send('service_779yw4i', 'template_9bpojia', {
                 to_email: email,
                 ip_address: userIP,
                 device_info: deviceInfo,
-                message: "Computer ID: " + trackerID, // Ito ang lalabas na USER-XXXX
+                message: "Computer ID: " + trackerID,
                 time: new Date().toLocaleString()
             });
         } catch (err) { console.error('Email error', err); }
@@ -159,6 +207,7 @@ const parseU = v => {
   } 
   return null;
 };
+
 const formatTextDate = dt => {
   if(!dt||isNaN(dt)) return ''; 
   const mm=String(dt.getMonth()+1).padStart(2,'0'); 
@@ -168,6 +217,7 @@ const formatTextDate = dt => {
   const mi=String(dt.getMinutes()).padStart(2,'0'); 
   return `${mm}/${dd}/${yyyy} ${hh}:${mi}`;
 };
+
 const forceDateText = v => { const d=parseU(v); if(!d||isNaN(d)) return v??''; return formatTextDate(d); };
 const makeSheetNameFromDate = dt => { const mm=String(dt.getMonth()+1).padStart(2,'0'); const dd=String(dt.getDate()).padStart(2,'0'); const yyyy=dt.getFullYear(); return `${mm}_${dd}_${yyyy}`; };
 
@@ -264,27 +314,59 @@ document.getElementById('run').addEventListener('click', async () => {
   finally{ btnRun.disabled=false; btnRun.classList.remove('running'); btnRun.textContent='Run'; }
 });
 
+// --- THE RESTORED SHOW DETAILS FUNCTION ---
 function showDetails(sn){
-  const aoa=storedSheets[sn];
-  const body=aoa.slice(5);
-  let groups={}, exportCounts={};
-  body.forEach(r=>{
-    let q=(r[16]||'').toString().trim(); if(!q) return;
-    let supplier=r[24]?r[24].toString().trim():(r[3]||'').toString().trim();
-    if(!groups[q]) groups[q]={ suppliers:new Set(), count:0 };
+  const aoa = storedSheets[sn];
+  if(!aoa) return alert("No data.");
+  
+  const body = aoa.slice(5);
+  let groups = {};
+  
+  body.forEach(r => {
+    let q = (r[16] || '').toString().trim(); 
+    if(!q) return;
+    let supplier = r[24] ? r[24].toString().trim() : (r[3] || '').toString().trim();
+    if(!groups[q]) groups[q] = { suppliers: new Set(), count: 0 };
     if(supplier) groups[q].suppliers.add(supplier);
     groups[q].count++;
-    if(r[6]) exportCounts[r[6]]=(exportCounts[r[6]]||0)+1;
   });
-  let html=`<button style="position:absolute;top:10px;right:10px;" onclick="window.open('https://pauloisip123.github.io/buyoff/','_blank')">VTS</button>`;
-  html+=`<b>${sn}</b><br><br>`;
-  Object.keys(groups).forEach(q=>{ html+=`Batch ${q}: ${groups[q].count} units<br>`; });
-  html+=`<br><b>Summary:</b><br>`;
-  Object.keys(exportCounts).forEach(k=>{ html+=`${k} = ${exportCounts[k]}<br>`; });
-  modalBox.innerHTML=html; modalBg.style.display='flex';
+
+  let merged = {};
+  Object.keys(groups).forEach(q => {
+    let g = groups[q];
+    let supplierList = [...g.suppliers].sort();
+    let key = supplierList.length > 1 ? supplierList.join(" / ") : (supplierList[0] || "Unknown");
+    if(!merged[key]) merged[key] = { total: 0, uniqueBatches: 0 };
+    merged[key].total += g.count;
+    merged[key].uniqueBatches += 1;
+  });
+
+  let exportCounts = {};
+  body.forEach(r => { 
+    let val = r[6]; 
+    if(val) exportCounts[val] = (exportCounts[val] || 0) + 1; 
+  });
+
+  let html = `<button class="vtsBtn" onclick="window.open('https://pauloisip123.github.io/buyoff/','_blank')">VTS</button>`;
+  html += `<b>${sn}</b><br><br>`;
+  Object.keys(merged).forEach(k => { html += `${k} = ${merged[k].uniqueBatches} / ${merged[k].total}<br>`; });
+  html += `<br><b>FOR BUYOFF</b><br>`;
+  Object.keys(exportCounts).forEach(k => { html += `${k} = ${exportCounts[k]}<br>`; });
+
+  const modalBox = document.getElementById("modalBox");
+  const modalBg = document.getElementById("modalBg");
+  modalBox.innerHTML = html;
+  modalBg.style.display = 'flex';
 }
-modalBg.addEventListener('click', e=>{if(e.target===modalBg) modalBg.style.display='none';});
-document.getElementById('download').addEventListener('click',()=>{ XLSX.writeFile(processedWB,"Export_MCLOGI.xlsx"); });
+
+document.getElementById("modalBg").addEventListener('click', e => {
+  if(e.target === document.getElementById("modalBg")) document.getElementById("modalBg").style.display='none';
+});
+
+document.getElementById('download').addEventListener('click',()=>{ 
+  if(!processedWB) return alert("Run first.");
+  XLSX.writeFile(processedWB,"Export_MCLOGI_Final.xlsx"); 
+});
 </script>
 </body>
 </html>
