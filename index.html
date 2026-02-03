@@ -330,7 +330,25 @@ function showDetails(sn){
   body.forEach(r => {
     let q = (r[16] || '').toString().trim(); 
     if(!q) return;
-    let supplier = r[24] ? r[24].toString().trim() : (r[3] || '').toString().trim();
+
+    // --- CUSTOM SUPPLIER LOGIC (Column X = Index 23) ---
+    let supplier = '';
+    let colX = (r[23] || '').toString().toUpperCase(); // Gawing uppercase para sa uniform check
+
+    if (colX.includes('BIPI')) {
+      supplier = 'BIPI';
+    } else if (colX.includes('MERIDIAN')) {
+      supplier = 'CY8';
+    } else if (colX === 'BTG') {
+      supplier = 'ATI';
+    } else if (colX === 'MNL') {
+      supplier = '2GO MANILA';
+    } else {
+      // Default: Kunin sa Column Y (24) o Column D (3)
+      supplier = r[24] ? r[24].toString().trim() : (r[3] || '').toString().trim();
+    }
+    // --------------------------------------------------
+
     if(!groups[q]) groups[q] = { suppliers: new Set(), count: 0 };
     if(supplier) groups[q].suppliers.add(supplier);
     groups[q].count++;
@@ -354,7 +372,11 @@ function showDetails(sn){
 
   let html = `<button class="vtsBtn" onclick="window.open('https://pauloisip123.github.io/buyoff/','_blank')">VTS</button>`;
   html += `<b>${sn}</b><br><br>`;
-  Object.keys(merged).forEach(k => { html += `${k} = ${merged[k].uniqueBatches} / ${merged[k].total}<br>`; });
+  
+  Object.keys(merged).sort().forEach(k => { 
+    html += `${k} = ${merged[k].uniqueBatches} / ${merged[k].total}<br>`; 
+  });
+
   html += `<br><b>FOR BUYOFF</b><br>`;
   Object.keys(exportCounts).forEach(k => { html += `${k} = ${exportCounts[k]}<br>`; });
 
