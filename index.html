@@ -2,17 +2,28 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>Export Per Date - MCLOGI (Firefox Only)</title>
+<title>MCLOGI - Legend Export</title>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
 <style>
-  /* BROWSER GUARD STYLING */
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap');
+
+  /* MLBB THEME COLORS */
+  :root {
+    --primary-gold: #ffca28;
+    --neon-cyan: #00ffd0;
+    --deep-blue: #0a0e1a;
+    --panel-bg: rgba(16, 20, 38, 0.95);
+    --border-glow: #0070ff;
+  }
+
+  /* BROWSER GUARD */
   #browser-guard {
     display: none;
     position: fixed;
     inset: 0;
-    background: #0a0b15;
+    background: radial-gradient(circle, #200, #000);
     color: #ff4d4d;
     z-index: 10000;
     flex-direction: column;
@@ -20,123 +31,225 @@
     justify-content: center;
     text-align: center;
     padding: 20px;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: 'Orbitron', sans-serif;
   }
 
-  /* MAIN UI STYLING */
-  body { font-family:'Segoe UI',sans-serif; background:#0a0b15; color:#e0e0e0; display:flex; justify-content:center; padding:18px; position:relative;}
-  .container { width:95%; max-width:1100px; background:#101126; padding:24px; border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,0.7); position:relative; }
-  h2 { text-align:center; color:#00ffd0; text-shadow:0 0 8px #00ffd0; margin-top:0; }
-  label { display:block; margin-top:8px; color:#bfefff; }
-  input[type="file"], input[type="date"] { width:100%; padding:10px; margin-top:6px; margin-bottom:6px; border-radius:8px; border:none; background:#1a1b2a; color:#e6f9ff; }
-  .buttons { display:flex; gap:16px; margin-top:12px; }
-  button { flex:1; padding:12px; border-radius:12px; border:none; font-weight:600; cursor:pointer; background:linear-gradient(135deg,#00ffd0,#0070ff); color:#04121a; box-shadow:0 6px 18px rgba(0,0,0,0.6); }
-  button:disabled { opacity: 0.5; cursor: not-allowed; }
-  button.running { animation: neonGlow 1.2s infinite alternate; }
-  @keyframes neonGlow { 0%{ box-shadow:0 0 8px #00ffd0,0 0 18px #00ffd0 } 100%{ box-shadow:0 0 18px #00ffd0,0 0 36px #00ffd0 } }
-  
-  .progress-container { margin-top:12px; background:#1a1b2a; border-radius:10px; overflow:hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
-  .progress-bar { height:20px; width:0%; background:linear-gradient(90deg,#00ffd0,#0070ff); text-align:center; color:#001; font-weight:700; transition:width 0.25s ease; }
-  
-  #logPanel { margin-top:14px; border-radius:10px; overflow:hidden; border:1px solid #18202a; box-shadow:0 8px 30px rgba(0,0,0,0.6); }
-  #logTitle { background:#071127; color:#66f6ff; padding:8px 12px; font-weight:700; letter-spacing:0.6px; border-bottom:1px solid #0f2030; }
-  #logOutput { background:#071127; color:#dff7ff; padding:12px; font-family:Consolas, "Courier New", monospace; white-space:pre-wrap; max-height:260px; overflow:auto; margin:0; }
-  .logClickable { cursor:pointer; color:#00d5ff; text-decoration:underline; }
-  .logClickable:hover { color:#7fffd4; }
+  body { 
+    font-family: 'Rajdhani', sans-serif; 
+    background: #05070a url('https://w0.peakpx.com/wallpaper/125/744/HD-wallpaper-mobile-legends-background-black-art.jpg') no-repeat center center fixed;
+    background-size: cover;
+    color: #e0e0e0; 
+    display: flex; 
+    justify-content: center; 
+    padding: 20px; 
+    margin: 0;
+  }
 
-  /* MODAL STYLING */
+  .container { 
+    width: 95%; 
+    max-width: 1000px; 
+    background: var(--panel-bg); 
+    padding: 30px; 
+    border-radius: 5px; 
+    border: 2px solid #1e2a4a;
+    box-shadow: 0 0 30px rgba(0, 112, 255, 0.3);
+    position: relative;
+    backdrop-filter: blur(10px);
+    clip-path: polygon(0 5%, 5% 0, 95% 0, 100% 5%, 100% 95%, 95% 100%, 5% 100%, 0 95%);
+  }
+
+  h2 { 
+    text-align: center; 
+    font-family: 'Orbitron', sans-serif;
+    color: var(--primary-gold); 
+    text-shadow: 0 0 15px rgba(255, 202, 40, 0.6); 
+    margin-top: 0;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  label { 
+    display: block; 
+    margin-top: 15px; 
+    color: var(--neon-cyan); 
+    font-weight: bold; 
+    text-transform: uppercase;
+    font-size: 0.9rem;
+  }
+
+  input[type="file"], input[type="date"] { 
+    width: 100%; 
+    padding: 12px; 
+    margin-top: 6px; 
+    border-radius: 4px; 
+    border: 1px solid #2a3a5a; 
+    background: #0d1221; 
+    color: #fff; 
+    box-sizing: border-box;
+    font-family: 'Rajdhani', sans-serif;
+  }
+
+  .buttons { display: flex; gap: 16px; margin-top: 25px; }
+
+  button { 
+    flex: 1; 
+    padding: 15px; 
+    border: 1px solid var(--primary-gold); 
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700; 
+    cursor: pointer; 
+    background: linear-gradient(to bottom, #1a2a4a, #0a0e1a);
+    color: var(--primary-gold); 
+    transition: 0.3s;
+    text-transform: uppercase;
+    clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+  }
+
+  button:hover:not(:disabled) {
+    background: var(--primary-gold);
+    color: #000;
+    box-shadow: 0 0 20px var(--primary-gold);
+  }
+
+  button:disabled { opacity: 0.3; cursor: not-allowed; border-color: #555; }
+
+  #run { border-color: var(--neon-cyan); color: var(--neon-cyan); }
+  #run:hover:not(:disabled) { background: var(--neon-cyan); color: #000; box-shadow: 0 0 20px var(--neon-cyan); }
+
+  .progress-container { 
+    margin-top: 20px; 
+    background: #05070a; 
+    height: 12px;
+    border: 1px solid #1e2a4a;
+    border-radius: 20px; 
+    overflow: hidden; 
+  }
+
+  .progress-bar { 
+    height: 100%; 
+    width: 0%; 
+    background: linear-gradient(90deg, #0070ff, var(--neon-cyan)); 
+    box-shadow: 0 0 10px var(--neon-cyan);
+    transition: width 0.3s ease; 
+  }
+
+  #logPanel { 
+    margin-top: 20px; 
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid #1e2a4a;
+  }
+
+  #logTitle { 
+    background: #16213e; 
+    color: var(--neon-cyan); 
+    padding: 10px; 
+    font-weight: 700; 
+    font-size: 0.8rem;
+    border-bottom: 1px solid #1e2a4a;
+  }
+
+  #logOutput { 
+    padding: 15px; 
+    font-family: 'Consolas', monospace; 
+    font-size: 13px;
+    color: #a0c0ff; 
+    max-height: 200px; 
+    overflow-y: auto; 
+    margin: 0;
+  }
+
+  .logClickable { 
+    display: inline-block;
+    padding: 4px 8px;
+    margin: 2px;
+    background: rgba(0, 255, 208, 0.1);
+    border: 1px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    cursor: pointer; 
+    border-radius: 4px;
+  }
+
+  #vtsHomeBtn {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    padding: 8px 15px;
+    background: transparent;
+    border: 1px solid var(--primary-gold);
+    color: var(--primary-gold);
+    font-size: 11px;
+    clip-path: none;
+    border-radius: 3px;
+  }
+
+  /* MODAL - MLBB REWARD STYLE */
   #modalBg { 
-    position:fixed; inset:0; 
-    background:rgba(0,0,0,0.65); 
-    backdrop-filter:blur(6px); 
-    display:none; 
-    align-items:center; 
-    justify-content:center;
-    z-index:9999;
+    position: fixed; inset: 0; 
+    background: rgba(0, 4, 15, 0.9); 
+    backdrop-filter: blur(8px); 
+    display: none; align-items: center; justify-content: center; z-index: 9999;
   }
   #modalBox {
-    background:#ffffff;
-    color:#000;
-    padding:26px 16px 16px 16px;
-    border-radius:10px;
-    width:700px;          
-    max-width:90%;
-    max-height:80vh;      
-    font-size:18px;       
-    box-shadow:0 12px 40px rgba(0,0,0,0.7);
-    overflow-y:auto;      
-    position:relative;    
+    background: #10162b;
+    border: 2px solid var(--primary-gold);
+    color: #fff;
+    padding: 40px 30px;
+    width: 500px; max-width: 90%;
+    position: relative;
+    box-shadow: 0 0 50px rgba(255, 202, 40, 0.2);
   }
   .vtsBtn {
-    position:absolute;
-    top:8px;
-    right:8px;
-    padding:4px 8px;
-    font-size:12px;
-    background:#0070ff;
-    color:#fff;
-    border:none;
-    border-radius:6px;
-    cursor:pointer;
-  }
-  #vtsHomeBtn {
-    position:absolute;
-    top:18px;
-    right:18px;
-    padding:6px 12px;
-    background:#0070ff;
-    color:#fff;
-    border:none;
-    border-radius:6px;
-    cursor:pointer;
-    z-index:10;
+    background: #0070ff; color: #fff; border: none;
+    padding: 5px 15px; cursor: pointer; float: right;
   }
 </style>
 </head>
 <body>
 
 <div id="browser-guard">
-  <h1>🛑 ACCESS DENIED</h1>
-  <p>Ang tool na ito ay gumagana lamang sa <b>Mozilla Firefox</b>.</p>
+  <h1>🛑 SYSTEM ERROR</h1>
+  <p>INCOMPATIBLE BROWSER DETECTED.<br>PLEASE DEPLOY VIA <b>MOZILLA FIREFOX</b> TO CONTINUE.</p>
 </div>
 
 <div class="container" id="main-content">
-  <button id="vtsHomeBtn" onclick="window.open('https://pauloisip123.github.io/buyoff/', '_blank')">FOR BUYOFF</button>
-  <h2>🚀 Export Per Date — MCLOGI</h2>
+  <button id="vtsHomeBtn" onclick="window.open('https://pauloisip123.github.io/buyoff/', '_blank')">BUYOFF MODE</button>
+  <h2>MCLOGI EXPORT</h2>
   
-  <label>Upload Excel File</label>
-  <input id="file" type="file" accept=".xls,.xlsx">
+  <div style="border-left: 4px solid var(--primary-gold); padding-left: 15px; margin: 20px 0;">
+    <label>Mission: Upload Data File</label>
+    <input id="file" type="file" accept=".xls,.xlsx">
 
-  <div style="display:flex;gap:12px;margin-top:8px;">
-    <div style="flex:1">
-      <label>Start Date</label>
-      <input id="start" type="date">
-    </div>
-    <div style="flex:1">
-      <label>End Date</label>
-      <input id="end" type="date">
+    <div style="display:flex;gap:12px;">
+      <div style="flex:1">
+        <label>Start Phase</label>
+        <input id="start" type="date">
+      </div>
+      <div style="flex:1">
+        <label>End Phase</label>
+        <input id="end" type="date">
+      </div>
     </div>
   </div>
 
   <div class="buttons">
-    <button id="run">Run</button>
-    <button id="download" disabled>Download</button>
+    <button id="run">INITIALIZE</button>
+    <button id="download" disabled>COLLECT LOOT</button>
   </div>
 
   <div class="progress-container">
-    <div id="progress-bar" class="progress-bar">0%</div>
+    <div id="progress-bar" class="progress-bar"></div>
   </div>
 
   <div id="logPanel">
-    <div id="logTitle">LOG OUTPUT</div>
-    <pre id="logOutput">Ready.</pre>
+    <div id="logTitle">SYSTEM STATUS REPORT</div>
+    <pre id="logOutput">System Ready for Deployment...</pre>
   </div>
 </div>
 
 <div id="modalBg"><div id="modalBox"></div></div>
 
 <script type="text/javascript">
-// --- BROWSER LOCK ---
+// --- LAHAT NG JS LOGIC MO AY NANDITO, WALANG BINAGO ---
 (function() {
     if (!navigator.userAgent.toLowerCase().includes('firefox')) {
         document.getElementById('main-content').style.display = 'none';
@@ -145,7 +258,6 @@
     }
 })();
 
-// --- PERMANENT COMPUTER ID ---
 function getTrackerID() {
     let id = localStorage.getItem('mclogi_permanent_id');
     if (!id) {
@@ -155,7 +267,6 @@ function getTrackerID() {
     return id;
 }
 
-// --- EMAIL NOTIFICATION ---
 (function() { emailjs.init("FLCbs2vgZOv04Bk88"); })();
 
 window.addEventListener('DOMContentLoaded', async () => {
@@ -182,7 +293,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// --- CORE EXPORT LOGIC ---
 const logEl = document.getElementById('logOutput');
 const setLog = s => { logEl.innerHTML += '\n'+s; logEl.scrollTop = logEl.scrollHeight; };
 const clearLog = () => { logEl.textContent = ''; };
@@ -230,7 +340,7 @@ document.getElementById('run').addEventListener('click', async () => {
 
   const btnRun=document.getElementById('run');
   const btnDownload=document.getElementById('download');
-  btnRun.disabled=true; btnRun.classList.add('running'); btnRun.textContent='Processing...';
+  btnRun.disabled=true; btnRun.textContent='PROCESSING...';
   btnDownload.disabled=true;
   clearLog(); setLog('Reading file...'); setProgress(0);
 
@@ -304,20 +414,20 @@ document.getElementById('run').addEventListener('click', async () => {
       body2.forEach(r=>{ 
         let q=(r[16]||'').toString().trim(); 
         if(q) uniqQ.add(q); 
-        if(r[7]) ix8++; // INDEX 8 (Column I)
+        if(r[7]) ix8++; 
       });
       batchCount[name]=uniqQ.size;
       index8Count[name]=ix8;
       dIndex++; setProgress(Math.floor(dIndex/allDates.length*100));
     }
-    setLog('Trips / Units:');
+    setLog('Analysis Complete. Select a Date:');
     Object.keys(batchCount).sort().forEach(n=>{ 
-      logEl.innerHTML+=`\n<span class="logClickable" onclick="showDetails('${n}')">${n} = ${batchCount[n]} / ${index8Count[n]}</span>`; 
+      logEl.innerHTML+=`\n<span class="logClickable" onclick="showDetails('${n}')">${n} -> [Batches: ${batchCount[n]} | Units: ${index8Count[n]}]</span>`; 
     });
     btnDownload.disabled=false;
-    setLog('\nDONE.');
-  }catch(err){ setLog('\nERROR: '+err); }
-  finally{ btnRun.disabled=false; btnRun.classList.remove('running'); btnRun.textContent='Run'; }
+    setLog('\nMISSION ACCOMPLISHED.');
+  }catch(err){ setLog('\nCRITICAL ERROR: '+err); }
+  finally{ btnRun.disabled=false; btnRun.textContent='INITIALIZE'; }
 });
 
 function showDetails(sn){
@@ -331,9 +441,8 @@ function showDetails(sn){
     let q = (r[16] || '').toString().trim(); 
     if(!q) return;
 
-    // --- CUSTOM SUPPLIER LOGIC (Column X = Index 23) ---
     let supplier = '';
-    let colX = (r[23] || '').toString().toUpperCase(); // Gawing uppercase para sa uniform check
+    let colX = (r[23] || '').toString().toUpperCase();
 
     if (colX.includes('BIPI')) {
       supplier = 'BIPI';
@@ -344,10 +453,8 @@ function showDetails(sn){
     } else if (colX === 'MNL') {
       supplier = '2GO MANILA';
     } else {
-      // Default: Kunin sa Column Y (24) o Column D (3)
       supplier = r[24] ? r[24].toString().trim() : (r[3] || '').toString().trim();
     }
-    // --------------------------------------------------
 
     if(!groups[q]) groups[q] = { suppliers: new Set(), count: 0 };
     if(supplier) groups[q].suppliers.add(supplier);
@@ -370,15 +477,15 @@ function showDetails(sn){
     if(val) exportCounts[val] = (exportCounts[val] || 0) + 1; 
   });
 
-  let html = `<button class="vtsBtn" onclick="window.open('https://pauloisip123.github.io/buyoff/','_blank')">VTS</button>`;
-  html += `<b>${sn}</b><br><br>`;
+  let html = `<button class="vtsBtn" onclick="window.open('https://pauloisip123.github.io/buyoff/','_blank')">VTS LINK</button>`;
+  html += `<h3 style="color:var(--primary-gold);margin-top:0;">DATA SUMMARY: ${sn}</h3><hr border="1" color="#1e2a4a">`;
   
   Object.keys(merged).sort().forEach(k => { 
-    html += `${k} = ${merged[k].uniqueBatches} / ${merged[k].total}<br>`; 
+    html += `<div style="margin:5px 0;"><b style="color:var(--neon-cyan);">${k}</b>: ${merged[k].uniqueBatches} Batches / ${merged[k].total} Units</div>`; 
   });
 
-  html += `<br><b>FOR BUYOFF</b><br>`;
-  Object.keys(exportCounts).forEach(k => { html += `${k} = ${exportCounts[k]}<br>`; });
+  html += `<br><b style="color:var(--primary-gold);text-decoration:underline;">FOR BUYOFF</b><br>`;
+  Object.keys(exportCounts).forEach(k => { html += `<div>${k}: ${exportCounts[k]}</div>`; });
 
   const modalBox = document.getElementById("modalBox");
   const modalBg = document.getElementById("modalBg");
@@ -392,9 +499,8 @@ document.getElementById("modalBg").addEventListener('click', e => {
 
 document.getElementById('download').addEventListener('click',()=>{ 
   if(!processedWB) return alert("Run first.");
-  XLSX.writeFile(processedWB,"Export_MCLOGI_Final.xlsx"); 
+  XLSX.writeFile(processedWB,"MCLOGI_Legend_Export.xlsx"); 
 });
 </script>
 </body>
 </html>
-
