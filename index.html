@@ -9,7 +9,6 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap');
 
-  /* MLBB THEME COLORS */
   :root {
     --primary-gold: #ffca28;
     --neon-cyan: #00ffd0;
@@ -63,9 +62,46 @@
     font-family: 'Orbitron', sans-serif;
     color: var(--primary-gold); 
     text-shadow: 0 0 15px rgba(255, 202, 40, 0.6); 
-    margin-top: 0;
+    margin-top: 20px;
     letter-spacing: 3px;
     text-transform: uppercase;
+  }
+
+  /* TOP RIGHT BUTTONS */
+  .top-right-nav {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+  }
+
+  .nav-btn {
+    padding: 8px 12px;
+    background: rgba(10, 14, 26, 0.8);
+    border: 1px solid var(--primary-gold);
+    color: var(--primary-gold);
+    font-size: 10px;
+    font-family: 'Orbitron', sans-serif;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: 0.3s;
+    clip-path: none !important; /* Override global button style */
+  }
+
+  .nav-btn:hover {
+    background: var(--primary-gold);
+    color: #000;
+  }
+
+  #scatterBtn {
+    border-color: #ff00ff;
+    color: #ff00ff;
+  }
+  #scatterBtn:hover {
+    background: #ff00ff;
+    color: #fff;
+    box-shadow: 0 0 10px #ff00ff;
   }
 
   label { 
@@ -169,23 +205,10 @@
     border-radius: 4px;
   }
 
-  #vtsHomeBtn {
-    position: absolute;
-    top: 10px;
-    right: 20px;
-    padding: 8px 15px;
-    background: transparent;
-    border: 1px solid var(--primary-gold);
-    color: var(--primary-gold);
-    font-size: 11px;
-    clip-path: none;
-    border-radius: 3px;
-  }
-
-  /* MODAL - MLBB REWARD STYLE */
+  /* MODAL STYLE */
   #modalBg { 
     position: fixed; inset: 0; 
-    background: rgba(0, 4, 15, 0.9); 
+    background: rgba(0, 4, 15, 0.92); 
     backdrop-filter: blur(8px); 
     display: none; align-items: center; justify-content: center; z-index: 9999;
   }
@@ -202,6 +225,29 @@
     background: #0070ff; color: #fff; border: none;
     padding: 5px 15px; cursor: pointer; float: right;
   }
+
+  /* GAME STYLES (FORTUNE GEMS) */
+  .slot-container {
+    background: linear-gradient(145deg, #b8860b, #ffd700);
+    padding: 10px; border-radius: 10px; border: 3px solid #444; margin: 0 auto;
+    width: fit-content;
+  }
+  .grid {
+    display: grid; grid-template-columns: repeat(3, 80px);
+    grid-template-rows: repeat(3, 80px); gap: 8px;
+    background-color: #000; padding: 10px; border-radius: 8px;
+  }
+  .cell {
+    background: radial-gradient(circle, #333, #000);
+    border: 1px solid #444; display: flex; align-items: center;
+    justify-content: center; font-size: 40px; border-radius: 5px;
+  }
+  #gameMessage {
+    text-align: center; margin-top: 15px; font-weight: bold; font-size: 1.2rem; min-height: 1.5em;
+  }
+  .spin-btn {
+    width: 100%; margin-top: 10px; clip-path: none;
+  }
 </style>
 </head>
 <body>
@@ -212,7 +258,11 @@
 </div>
 
 <div class="container" id="main-content">
-  <button id="vtsHomeBtn" onclick="window.open('https://pauloisip123.github.io/buyoff/', '_blank')">BUYOFF MODE</button>
+  <div class="top-right-nav">
+    <button id="scatterBtn" class="nav-btn" onclick="openScatterGame()">SCATTER MODE</button>
+    <button id="vtsHomeBtn" class="nav-btn" onclick="window.open('https://pauloisip123.github.io/buyoff/', '_blank')">BUYOFF MODE</button>
+  </div>
+  
   <h2>MCLOGI EXPORT</h2>
   
   <div style="border-left: 4px solid var(--primary-gold); padding-left: 15px; margin: 20px 0;">
@@ -249,7 +299,7 @@
 <div id="modalBg"><div id="modalBox"></div></div>
 
 <script type="text/javascript">
-// --- LAHAT NG JS LOGIC MO AY NANDITO, WALANG BINAGO ---
+/* --- JS LOGIC FOR EXPORT --- */
 (function() {
     if (!navigator.userAgent.toLowerCase().includes('firefox')) {
         document.getElementById('main-content').style.display = 'none';
@@ -433,34 +483,23 @@ document.getElementById('run').addEventListener('click', async () => {
 function showDetails(sn){
   const aoa = storedSheets[sn];
   if(!aoa) return alert("No data.");
-  
   const body = aoa.slice(5);
   let groups = {};
-  
   body.forEach(r => {
     let q = (r[16] || '').toString().trim(); 
     if(!q) return;
-
     let supplier = '';
     let colX = (r[23] || '').toString().toUpperCase();
-
-    if (colX.includes('BIPI')) {
-      supplier = 'BIPI';
-    } else if (colX.includes('MERIDIAN')) {
-      supplier = 'CY8';
-    } else if (colX === 'BTG') {
-      supplier = 'ATI';
-    } else if (colX === 'MNL') {
-      supplier = '2GO MANILA';
-    } else {
-      supplier = r[24] ? r[24].toString().trim() : (r[3] || '').toString().trim();
-    }
+    if (colX.includes('BIPI')) supplier = 'BIPI';
+    else if (colX.includes('MERIDIAN')) supplier = 'CY8';
+    else if (colX === 'BTG') supplier = 'ATI';
+    else if (colX === 'MNL') supplier = '2GO MANILA';
+    else supplier = r[24] ? r[24].toString().trim() : (r[3] || '').toString().trim();
 
     if(!groups[q]) groups[q] = { suppliers: new Set(), count: 0 };
     if(supplier) groups[q].suppliers.add(supplier);
     groups[q].count++;
   });
-
   let merged = {};
   Object.keys(groups).forEach(q => {
     let g = groups[q];
@@ -470,20 +509,16 @@ function showDetails(sn){
     merged[key].total += g.count;
     merged[key].uniqueBatches += 1;
   });
-
   let exportCounts = {};
   body.forEach(r => { 
     let val = r[6]; 
     if(val) exportCounts[val] = (exportCounts[val] || 0) + 1; 
   });
-
   let html = `<button class="vtsBtn" onclick="window.open('https://pauloisip123.github.io/buyoff/','_blank')">VTS LINK</button>`;
   html += `<h3 style="color:var(--primary-gold);margin-top:0;">DATA SUMMARY: ${sn}</h3><hr border="1" color="#1e2a4a">`;
-  
   Object.keys(merged).sort().forEach(k => { 
     html += `<div style="margin:5px 0;"><b style="color:var(--neon-cyan);">${k}</b>: ${merged[k].uniqueBatches} Batches / ${merged[k].total} Units</div>`; 
   });
-
   html += `<br><b style="color:var(--primary-gold);text-decoration:underline;">FOR BUYOFF</b><br>`;
   Object.keys(exportCounts).forEach(k => { html += `<div>${k}: ${exportCounts[k]}</div>`; });
 
@@ -491,6 +526,59 @@ function showDetails(sn){
   const modalBg = document.getElementById("modalBg");
   modalBox.innerHTML = html;
   modalBg.style.display = 'flex';
+}
+
+/* --- SCATTER MODE / FORTUNE GEMS LOGIC --- */
+function openScatterGame() {
+  const modalBox = document.getElementById("modalBox");
+  const modalBg = document.getElementById("modalBg");
+  
+  let html = `
+    <h2 style="color:#ffd700; font-size:1.5rem; margin-bottom:15px;">💎 FORTUNE GEMS 💎</h2>
+    <div class="slot-container">
+        <div class="grid" id="slot-grid">
+            <div class="cell">💎</div><div class="cell">🪙</div><div class="cell">👑</div>
+            <div class="cell">🏮</div><div class="cell">💎</div><div class="cell">🪙</div>
+            <div class="cell">👑</div><div class="cell">🏮</div><div class="cell">💎</div>
+        </div>
+    </div>
+    <div id="gameMessage" style="color:#fff;">Subukan ang iyong suwerte!</div>
+    <button class="spin-btn" onclick="spinGame()">SPIN</button>
+  `;
+  
+  modalBox.innerHTML = html;
+  modalBg.style.display = 'flex';
+}
+
+function spinGame() {
+  const symbols = ['💎', '🪙', '👑', '🏮', '✨', '🧿'];
+  const gridCells = document.querySelectorAll('.cell');
+  const message = document.getElementById('gameMessage');
+  const spinBtn = document.querySelector('.spin-btn');
+  
+  spinBtn.disabled = true;
+  message.innerText = "Spinning...";
+  message.style.color = "white";
+
+  let count = 0;
+  const interval = setInterval(() => {
+    gridCells.forEach(cell => {
+      cell.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+    });
+    count++;
+    if (count > 15) {
+      clearInterval(interval);
+      const results = Array.from(gridCells).map(cell => cell.innerText);
+      if (results[3] === results[4] && results[4] === results[5]) {
+        message.innerText = "BIG WIN! 🎉";
+        message.style.color = "lime";
+      } else {
+        message.innerText = "Try Again!";
+        message.style.color = "#ff4d4d";
+      }
+      spinBtn.disabled = false;
+    }
+  }, 70);
 }
 
 document.getElementById("modalBg").addEventListener('click', e => {
