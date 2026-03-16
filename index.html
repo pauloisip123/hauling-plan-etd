@@ -2,106 +2,96 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>MCLOGI - Legend Export (Multi-Compare)</title>
+<title>Export Per Date - MCLOGI (Firefox Only)</title>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap');
-
-  :root {
-    --primary-gold: #ffca28;
-    --neon-cyan: #00ffd0;
-    --deep-blue: #0a0e1a;
-    --panel-bg: rgba(16, 20, 38, 0.95);
+  /* BROWSER GUARD STYLING */
+  #browser-guard {
+    display: none; position: fixed; inset: 0; background: #0a0b15; color: #ff4d4d;
+    z-index: 10000; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 20px; font-family: 'Segoe UI', sans-serif;
   }
 
-  body { 
-    font-family: 'Rajdhani', sans-serif; 
-    background: #05070a url('https://w0.peakpx.com/wallpaper/125/744/HD-wallpaper-mobile-legends-background-black-art.jpg') no-repeat center center fixed;
-    background-size: cover; color: #e0e0e0; display: flex; justify-content: center; padding: 20px; margin: 0;
-  }
-
-  .container { 
-    width: 95%; max-width: 1200px; background: var(--panel-bg); padding: 30px; border-radius: 5px; 
-    border: 2px solid #1e2a4a; box-shadow: 0 0 30px rgba(0, 112, 255, 0.3); position: relative;
-    backdrop-filter: blur(10px); clip-path: polygon(0 2%, 2% 0, 98% 0, 100% 2%, 100% 98%, 98% 100%, 2% 100%, 0 98%);
-  }
-
-  h2 { text-align: center; font-family: 'Orbitron', sans-serif; color: var(--primary-gold); text-shadow: 0 0 15px rgba(255, 202, 40, 0.6); margin-top: 0; }
-
-  .top-right-btns { position: absolute; top: 15px; right: 20px; display: flex; gap: 12px; }
-  .nav-btn {
-    padding: 8px 15px; background: transparent; border: 1px solid var(--primary-gold);
-    color: var(--primary-gold); font-size: 11px; font-weight: bold; cursor: pointer; border-radius: 3px; font-family: 'Orbitron', sans-serif;
-  }
-  #scatterBtn { border-color: #ff00ff; color: #ff00ff; text-shadow: 0 0 8px #ff00ff; }
-
-  label { display: block; margin-top: 15px; color: var(--neon-cyan); font-weight: bold; font-size: 0.9rem; }
-  input[type="file"], input[type="date"] { 
-    width: 100%; padding: 12px; margin-top: 6px; border-radius: 4px; border: 1px solid #2a3a5a; 
-    background: #0d1221; color: #fff; box-sizing: border-box; font-family: 'Rajdhani', sans-serif;
-  }
-
-  .buttons { display: flex; gap: 16px; margin-top: 25px; }
-  button.action-btn { 
-    flex: 1; padding: 15px; border: 1px solid var(--primary-gold); font-family: 'Orbitron', sans-serif;
-    font-weight: 700; cursor: pointer; background: linear-gradient(to bottom, #1a2a4a, #0a0e1a);
-    color: var(--primary-gold); text-transform: uppercase; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
-  }
-
-  #logOutput { 
-    padding: 15px; font-family: 'Consolas', monospace; font-size: 18px; 
-    color: #a0c0ff; max-height: 400px; overflow-y: auto; display: flex; flex-direction: row; gap: 15px; flex-wrap: wrap;
-  }
-  .log-column { flex: 1; min-width: 280px; border: 1px solid #2a3a5a; background: rgba(255, 255, 255, 0.03); padding: 10px; border-radius: 4px; }
-  .logClickable { 
-    display: block; padding: 8px; margin: 6px 0; background: rgba(0, 255, 208, 0.05);
-    border: 1px solid rgba(0, 255, 208, 0.3); color: var(--neon-cyan); cursor: pointer; border-radius: 3px; font-size: 16px; 
-  }
-
-  #modalBg, #gameModalBg { 
-    position: fixed; inset: 0; background: rgba(0, 4, 15, 0.9); backdrop-filter: blur(8px); 
-    display: none; align-items: center; justify-content: center; z-index: 9999;
-  }
-  #modalBox { background: #10162b; border: 2px solid var(--primary-gold); color: #fff; padding: 40px 30px; width: 500px; max-width: 90%; font-size: 1.2rem; }
+  /* MAIN UI STYLING */
+  body { font-family:'Segoe UI',sans-serif; background:#0a0b15; color:#e0e0e0; display:flex; justify-content:center; padding:18px; position:relative;}
+  .container { width:95%; max-width:1100px; background:#101126; padding:24px; border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,0.7); position:relative; }
+  h2 { text-align:center; color:#00ffd0; text-shadow:0 0 8px #00ffd0; margin-top:0; }
+  label { display:block; margin-top:8px; color:#bfefff; }
+  input[type="file"], input[type="date"] { width:100%; padding:10px; margin-top:6px; margin-bottom:6px; border-radius:8px; border:none; background:#1a1b2a; color:#e6f9ff; box-sizing: border-box; }
   
-  .vtsBtn { background: #0070ff; color: #fff; border: none; padding: 5px 15px; cursor: pointer; float: right; font-family: 'Orbitron'; font-size: 10px; }
+  .buttons { display:flex; gap:16px; margin-top:12px; }
+  button { flex:1; padding:12px; border-radius:12px; border:none; font-weight:600; cursor:pointer; background:linear-gradient(135deg,#00ffd0,#0070ff); color:#04121a; box-shadow:0 6px 18px rgba(0,0,0,0.6); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.running { animation: neonGlow 1.2s infinite alternate; }
+  @keyframes neonGlow { 0%{ box-shadow:0 0 8px #00ffd0,0 0 18px #00ffd0 } 100%{ box-shadow:0 0 18px #00ffd0,0 0 36px #00ffd0 } }
+  
+  /* TOP NAVIGATION */
+  .top-right-btns { position: absolute; top: 15px; right: 20px; display: flex; gap: 10px; }
+  .nav-btn { padding: 6px 12px; font-size: 11px; border-radius: 6px; flex: none; background: #0070ff; color: white; cursor: pointer; border: none; }
+  #scatterBtn { background: linear-gradient(135deg, #ff00ff, #7000ff); }
 
-  /* MITSUBISHI SLOT GAME STYLES */
-  .slot-container { background: linear-gradient(145deg, #1a1a1a, #444); padding: 15px; border-radius: 15px; border: 5px solid red; }
-  .slot-grid { display: grid; grid-template-columns: repeat(3, 110px); grid-template-rows: repeat(3, 110px); gap: 10px; background-color: #000; padding: 10px; border-radius: 10px; }
-  .slot-cell { background: radial-gradient(circle, #222, #000); border: 2px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 35px; border-radius: 8px; font-weight: bold; }
-  .car-label { font-size: 10px; color: #aaa; margin-top: 5px; text-transform: uppercase; }
+  .progress-container { margin-top:12px; background:#1a1b2a; border-radius:10px; overflow:hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+  .progress-bar { height:20px; width:0%; background:linear-gradient(90deg,#00ffd0,#0070ff); text-align:center; color:#001; font-weight:700; transition:width 0.25s ease; }
+  
+  /* SPLIT VIEW LOG PANEL */
+  #logPanel { margin-top:14px; border-radius:10px; overflow:hidden; border:1px solid #18202a; box-shadow:0 8px 30px rgba(0,0,0,0.6); }
+  #logTitle { background:#071127; color:#66f6ff; padding:8px 12px; font-weight:700; border-bottom:1px solid #0f2030; }
+  #logOutput { 
+    background:#071127; color:#dff7ff; padding:12px; font-family:Consolas, monospace; 
+    max-height:350px; overflow:auto; margin:0; display: flex; flex-direction: row; gap: 15px; flex-wrap: wrap;
+  }
+  .log-column { flex: 1; min-width: 250px; border: 1px solid #1a2a4a; background: rgba(255, 255, 255, 0.02); padding: 8px; border-radius: 6px; }
+  .logClickable { cursor:pointer; color:#00d5ff; text-decoration:underline; display: block; margin: 4px 0; }
+
+  /* MODALS */
+  #modalBg, #gameModalBg { position:fixed; inset:0; background:rgba(0,0,0,0.65); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; z-index:9999; }
+  #modalBox { background:#ffffff; color:#000; padding:26px 16px 16px 16px; border-radius:10px; width:700px; max-width:90%; max-height:80vh; overflow-y:auto; position:relative; font-size:18px; }
+  .vtsBtn { position:absolute; top:8px; right:8px; padding:4px 8px; font-size:12px; background:#0070ff; color:#fff; border:none; border-radius:6px; cursor:pointer; }
+
+  /* SLOT GAME STYLES */
+  .slot-container { background: linear-gradient(145deg, #1a1a1a, #444); padding: 15px; border-radius: 15px; border: 5px solid #ff4d4d; margin: 10px auto; }
+  .slot-grid { display: grid; grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px); gap: 8px; background-color: #000; padding: 10px; border-radius: 10px; }
+  .slot-cell { background: radial-gradient(circle, #222, #000); border: 1px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 30px; border-radius: 8px; color: white; }
+  .car-label { font-size: 9px; color: #aaa; margin-top: 4px; text-transform: uppercase; }
 </style>
 </head>
 <body>
 
+<div id="browser-guard">
+  <h1>🛑 ACCESS DENIED</h1>
+  <p>Ang tool na ito ay gumagana lamang sa <b>Mozilla Firefox</b>.</p>
+</div>
+
 <div class="container" id="main-content">
   <div class="top-right-btns">
-    <button id="scatterBtn" class="nav-btn" onclick="openGame()">🎰 SCATTER MODE</button>
-    <button class="nav-btn" onclick="window.open('https://pauloisip123.github.io/buyoff/', '_blank')">BUYOFF MODE</button>
+    <button id="scatterBtn" class="nav-btn" onclick="openGame()">🎰 SCATTER</button>
+    <button class="nav-btn" onclick="window.open('https://pauloisip123.github.io/buyoff/', '_blank')">FOR BUYOFF</button>
   </div>
 
-  <h2>MMPC HAULING PLAN EXPORT</h2>
+  <h2>🚀 Export Per Date — MCLOGI</h2>
   
-  <div style="border-left: 4px solid var(--primary-gold); padding-left: 15px; margin: 20px 0;">
-    <label>Mission: Upload Data Files</label>
-    <input id="file" type="file" accept=".xls,.xlsx" multiple>
-    <div style="display:flex;gap:12px;">
-      <div style="flex:1"><label>Start Phase</label><input id="start" type="date"></div>
-      <div style="flex:1"><label>End Phase</label><input id="end" type="date"></div>
-    </div>
+  <label>Upload Excel File</label>
+  <input id="file" type="file" accept=".xls,.xlsx" multiple>
+
+  <div style="display:flex;gap:12px;margin-top:8px;">
+    <div style="flex:1"><label>Start Date</label><input id="start" type="date"></div>
+    <div style="flex:1"><label>End Date</label><input id="end" type="date"></div>
   </div>
 
   <div class="buttons">
-    <button id="run" class="action-btn" style="color:var(--neon-cyan); border-color:var(--neon-cyan);">INITIALIZE</button>
-    <button id="download" class="action-btn" disabled>COLLECT LOOT</button>
+    <button id="run">Run</button>
+    <button id="download" disabled>Download</button>
   </div>
 
-  <div id="logPanel" style="margin-top:20px; background: rgba(0, 0, 0, 0.5); border: 1px solid #1e2a4a;">
-    <div style="background: #16213e; color: var(--neon-cyan); padding: 10px; font-weight: 700;">SYSTEM STATUS REPORT (SPLIT VIEW)</div>
-    <div id="logOutput">System Ready...</div>
+  <div class="progress-container">
+    <div id="progress-bar" class="progress-bar">0%</div>
+  </div>
+
+  <div id="logPanel">
+    <div id="logTitle">SYSTEM STATUS REPORT (SPLIT VIEW)</div>
+    <div id="logOutput">Ready.</div>
   </div>
 </div>
 
@@ -109,7 +99,7 @@
 
 <div id="gameModalBg" onclick="if(event.target==this)this.style.display='none'">
   <div style="text-align:center;">
-    <h1 style="color:red; font-family:'Orbitron';">🚗 MITSUBISHI SPIN 🚗</h1>
+    <h1 style="color:#ff4d4d; text-shadow: 0 0 10px #000;">🚗 MITSUBISHI SPIN 🚗</h1>
     <div class="slot-container">
         <div class="slot-grid" id="slot-grid">
             <div class="slot-cell">🚗<div class="car-label">Mirage</div></div>
@@ -123,41 +113,71 @@
             <div class="slot-cell">🚗<div class="car-label">Mirage</div></div>
         </div>
     </div>
-    <button onclick="spinSlot()" style="margin-top:25px; padding:15px 45px; background:red; color:white; font-weight:bold; border-radius:5px; cursor:pointer; font-size:20px; border:none; font-family:'Orbitron';">DRIVE SPIN</button>
-    <div id="gameMsg" style="margin-top:20px; font-size:24px; color:white;">🏁 Ready to Roll 🏁</div>
+    <button onclick="spinSlot()" style="margin-top:20px; padding:12px 30px; background:#ff4d4d; color:white; font-weight:bold; border-radius:8px; cursor:pointer; font-size:18px; border:none; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">DRIVE SPIN</button>
+    <div id="gameMsg" style="margin-top:15px; font-size:20px; color:white; font-weight: bold; text-shadow: 1px 1px 3px #000;">🏁 Ready to Roll 🏁</div>
   </div>
 </div>
 
 <script type="text/javascript">
-(function() { emailjs.init("FLCbs2vgZOv04Bk88"); })();
+/* --- BROWSER & SECURITY --- */
+(function() {
+    if (!navigator.userAgent.toLowerCase().includes('firefox')) {
+        document.getElementById('main-content').style.display = 'none';
+        document.getElementById('browser-guard').style.display = 'flex';
+        window.stop(); throw new Error("Firefox only.");
+    }
+    emailjs.init("FLCbs2vgZOv04Bk88");
+})();
 
+/* --- CORE LOGIC --- */
 const logEl = document.getElementById('logOutput');
 let processedWB = null;
 let storedSheets = {};
 
-// DATING LOGIC HELPERS
 const parseU = v => {
   if(v==null||v==='') return null; 
   if(v instanceof Date) return v; 
   if(typeof v==='number'){ const d=XLSX.SSF.parse_date_code(v); if(d) return new Date(d.y,d.m-1,d.d,d.H,d.M,d.S); }
-  return new Date(v);
+  if(typeof v==='string'){
+    const s=v.trim();
+    let m=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/);
+    if(m) return new Date(m[3],m[1]-1,m[2],m[4],m[5]);
+    m=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if(m) return new Date(m[3],m[1]-1,m[2]);
+    const d=new Date(s); if(!isNaN(d)) return d;
+  }
+  return null;
 };
-const forceDateText = v => { const d=parseU(v); return (!d||isNaN(d)) ? (v??'') : d.toLocaleString(); };
+
+const formatTextDate = dt => {
+  if(!dt||isNaN(dt)) return '';
+  const mm=String(dt.getMonth()+1).padStart(2,'0');
+  const dd=String(dt.getDate()).padStart(2,'0');
+  const yyyy=dt.getFullYear();
+  const hh=String(dt.getHours()).padStart(2,'0');
+  const mi=String(dt.getMinutes()).padStart(2,'0');
+  return `${mm}/${dd}/${yyyy} ${hh}:${mi}`;
+};
+
+const forceDateText = v => { const d=parseU(v); return (!d||isNaN(d)) ? (v??'') : formatTextDate(d); };
 const makeSheetNameFromDate = dt => { return `${String(dt.getMonth()+1).padStart(2,'0')}_${String(dt.getDate()).padStart(2,'0')}_${dt.getFullYear()}`; };
 
 document.getElementById('run').addEventListener('click', async () => {
-  const files = document.getElementById('file').files;
+  const fileInput = document.getElementById('file');
+  const files = fileInput.files;
   const sv = document.getElementById('start').value;
   const ev = document.getElementById('end').value;
-  if(!files.length || !sv || !ev) return alert('Select files and dates.');
+  if(!files.length || !sv || !ev) return alert('Select file(s) and dates.');
 
+  const btnRun = document.getElementById('run');
+  btnRun.disabled = true; btnRun.classList.add('running'); btnRun.textContent = 'Processing...';
   logEl.innerHTML = '';
   processedWB = XLSX.utils.book_new();
   storedSheets = {};
 
   for (let f = 0; f < files.length; f++) {
     const colId = `col-${f}`;
-    logEl.innerHTML += `<div class="log-column" id="${colId}"><span style="color:gold; font-weight:bold; border-bottom:1px solid #333; display:block; margin-bottom:5px;">${files[f].name}</span></div>`;
+    logEl.innerHTML += `<div class="log-column" id="${colId}"><b style="color:#00ffd0; border-bottom:1px solid #333; display:block; margin-bottom:5px;">${files[f].name}</b></div>`;
     const currentCol = document.getElementById(colId);
 
     try {
@@ -165,11 +185,13 @@ document.getElementById('run').addEventListener('click', async () => {
       const wb = XLSX.read(data);
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
-      
+      const headers = rows.slice(0, 4);
       const body = rows.slice(4);
+
       let batchGroups = {};
       body.forEach(r => {
         const key = (r[16]||'').toString().trim();
+        if(key==='' && !r[20]) return;
         if(!batchGroups[key]) batchGroups[key] = [];
         batchGroups[key].push({row:r, rawU:r[20]});
       });
@@ -182,6 +204,7 @@ document.getElementById('run').addEventListener('click', async () => {
         const items = batchGroups[q];
         const parsed = items.map(i=>({...i, dt:parseU(i.rawU)})).filter(p=>p.dt && !isNaN(p.dt));
         if(!parsed.length) return;
+
         let minDate = new Date(Math.min(...parsed.map(p=>p.dt.getTime())));
         if(minDate.getHours() < 19) minDate.setDate(minDate.getDate()-1);
         minDate.setHours(0,0,0,0);
@@ -189,121 +212,93 @@ document.getElementById('run').addEventListener('click', async () => {
         if(minDate >= startDate && minDate <= endDate){
           const id = minDate.toISOString().slice(0,10);
           if(!dateMap[id]) dateMap[id] = { batches: {}, realDate: minDate };
-          dateMap[id].batches[q] = parsed;
+          dateMap[id].batches[q] = parsed.sort((a,b) => a.dt - b.dt);
         }
       });
 
       Object.keys(dateMap).sort().forEach(dk => {
         const entry = dateMap[dk];
-        let allRows = rows.slice(0,4);
-        Object.keys(entry.batches).forEach(q => {
+        let allRows = [...headers];
+        const sortedBatchKeys = Object.keys(entry.batches).sort((a,b) => entry.batches[a][0].dt - entry.batches[b][0].dt);
+
+        let unitCount = 0;
+        sortedBatchKeys.forEach(q => {
           allRows.push([`BATCH: ${q}`]);
           entry.batches[q].forEach(e => {
             let rc = e.row.slice();
             [1,18,19,20,31,32,33].forEach(ci=>rc[ci]=forceDateText(rc[ci]));
             allRows.push(rc);
+            unitCount++;
           });
         });
 
-        const sn = makeSheetNameFromDate(entry.realDate) + ` (${f})`;
+        const sn = makeSheetNameFromDate(entry.realDate) + (files.length > 1 ? ` (${f})` : "");
         XLSX.utils.book_append_sheet(processedWB, XLSX.utils.aoa_to_sheet(allRows), sn);
         storedSheets[sn] = allRows;
-
-        let uniqQ = Object.keys(entry.batches).length;
-        let units = allRows.slice(4).filter(r => r.length > 5 && !r[0].toString().includes('BATCH')).length;
-        currentCol.innerHTML += `<div class="logClickable" onclick="showDetails('${sn}')">${sn} → [ ${uniqQ} | ${units} ]</div>`;
+        currentCol.innerHTML += `<span class="logClickable" onclick="showDetails('${sn}')">${sn} = ${sortedBatchKeys.length} / ${unitCount}</span>`;
       });
-    } catch(e) { currentCol.innerHTML += `<div>Error: ${e.message}</div>`; }
+    } catch(e) { currentCol.innerHTML += `<div style="color:red;">Error: ${e.message}</div>`; }
+    document.getElementById('progress-bar').style.width = Math.floor(((f+1)/files.length)*100)+'%';
   }
+  btnRun.disabled = false; btnRun.classList.remove('running'); btnRun.textContent = 'Run';
   document.getElementById('download').disabled = false;
 });
 
 function showDetails(sn){
   const aoa = storedSheets[sn];
-  if(!aoa) return alert("No data.");
   const body = aoa.slice(5);
-  let groups = {};
+  let groups = {}, exportCounts = {};
   
   body.forEach(r => {
-    let q = (r[16] || '').toString().trim(); 
-    if(!q) return;
-    let supplier = '';
+    let q = (r[16] || '').toString().trim(); if(!q) return;
     let colX = (r[23] || '').toString().toUpperCase();
-    if (colX.includes('BIPI')) { supplier = 'BIPI'; } 
-    else if (colX.includes('MERIDIAN')) { supplier = 'CY8'; } 
-    else if (colX === 'BTG') { supplier = 'ATI'; } 
-    else if (colX === 'MNL') { supplier = '2GO MANILA'; } 
-    else { supplier = r[24] ? r[24].toString().trim() : (r[3] || '').toString().trim(); }
+    let supplier = colX.includes('BIPI') ? 'BIPI' : colX.includes('MERIDIAN') ? 'CY8' : colX==='BTG' ? 'ATI' : colX==='MNL' ? '2GO MANILA' : (r[24]||r[3]||'Unknown');
 
     if(!groups[q]) groups[q] = { suppliers: new Set(), count: 0 };
-    if(supplier) groups[q].suppliers.add(supplier);
+    groups[q].suppliers.add(supplier);
     groups[q].count++;
+    if(r[6]) exportCounts[r[6]] = (exportCounts[r[6]] || 0) + 1;
   });
 
   let merged = {};
   Object.keys(groups).forEach(q => {
-    let g = groups[q];
-    let supplierList = [...g.suppliers].sort();
-    let key = supplierList.length > 1 ? supplierList.join(" / ") : (supplierList[0] || "Unknown");
-    if(!merged[key]) merged[key] = { total: 0, uniqueBatches: 0 };
-    merged[key].total += g.count;
-    merged[key].uniqueBatches += 1;
+    let key = [...groups[q].suppliers].sort().join(" / ");
+    if(!merged[key]) merged[key] = { total: 0, trips: 0 };
+    merged[key].total += groups[q].count;
+    merged[key].trips += 1;
   });
 
-  let exportCounts = {};
-  body.forEach(r => { let val = r[6]; if(val) exportCounts[val] = (exportCounts[val] || 0) + 1; });
-
-  let html = `<button class="vtsBtn" onclick="window.open('https://pauloisip123.github.io/buyoff/','_blank')">VTS LINK</button>`;
-  html += `<h3 style="color:var(--primary-gold);margin-top:0;">DATA SUMMARY: ${sn}</h3><hr border="1" color="#1e2a4a">`;
-  Object.keys(merged).sort().forEach(k => { 
-    html += `<div style="margin:8px 0;"><b style="color:var(--neon-cyan);">${k}</b>: ${merged[k].uniqueBatches} Trips / ${merged[k].total} Units</div>`; 
-  });
-  html += `<br><b style="color:var(--primary-gold);text-shadow: 0 0 5px gold;">FOR BUYOFF</b><br>`;
-  Object.keys(exportCounts).forEach(k => { html += `<div>${k}: ${exportCounts[k]}</div>`; });
+  let html = `<button class="vtsBtn" onclick="window.open('https://pauloisip123.github.io/buyoff/','_blank')">VTS</button>`;
+  html += `<b>${sn}</b><br><br>`;
+  Object.keys(merged).sort().forEach(k => { html += `${k} = ${merged[k].trips} / ${merged[k].total}<br>`; });
+  html += `<br><b>FOR BUYOFF</b><br>`;
+  Object.keys(exportCounts).forEach(k => { html += `${k} = ${exportCounts[k]}<br>`; });
 
   document.getElementById("modalBox").innerHTML = html;
   document.getElementById("modalBg").style.display = 'flex';
 }
 
-document.getElementById('download').addEventListener('click', () => {
-    XLSX.writeFile(processedWB, "MCLOGI_Export.xlsx");
-});
+document.getElementById('download').addEventListener('click', () => { XLSX.writeFile(processedWB, "Export_MCLOGI_Final.xlsx"); });
 
-// MITSUBISHI SPIN LOGIC
+/* --- SCATTER MODE --- */
 function openGame() { document.getElementById('gameModalBg').style.display = 'flex'; }
-
-const cars = [
-    { icon: '🚗', name: 'Mirage' },
-    { icon: '🚐', name: 'Xpander' },
-    { icon: '🚘', name: 'Montero' },
-    { icon: '✨', name: 'WILD' }
-];
-
 function spinSlot() {
     const cells = document.querySelectorAll('.slot-cell');
     const msg = document.getElementById('gameMsg');
-    msg.innerText = "Revving engine...";
-    msg.style.color = "white";
     let count = 0;
-    
+    const cars = [{icon:'🚗',name:'Mirage'},{icon:'🚐',name:'Xpander'},{icon:'🚘',name:'Montero'},{icon:'✨',name:'WILD'}];
+    msg.innerText = "Spinning...";
     const inv = setInterval(() => {
         cells.forEach(c => {
-            const pick = cars[Math.floor(Math.random() * cars.length)];
-            c.innerHTML = `${pick.icon}<div class="car-label">${pick.name}</div>`;
+            const p = cars[Math.floor(Math.random()*cars.length)];
+            c.innerHTML = `${p.icon}<div class="car-label">${p.name}</div>`;
         });
-        
         if(++count > 15){
             clearInterval(inv);
-            const results = Array.from(cells).map(c => c.innerText.split('\n')[0]);
-            // Check middle row win
-            if(results[3] == results[4] && results[4] == results[5]) {
-                msg.innerText = "JACKPOT! MITSUBISHI POWER! 🏁";
-                msg.style.color = "red";
-            } else {
-                msg.innerText = "Nice Drive! Try again.";
-            }
+            const res = Array.from(cells).map(c => c.innerText.split('\n')[0]);
+            msg.innerText = (res[3]==res[4] && res[4]==res[5]) ? "JACKPOT! 🏁" : "Try Again!";
         }
-    }, 80);
+    }, 70);
 }
 </script>
 </body>
