@@ -156,11 +156,11 @@ const formatTextDate = dt => {
   const yyyy=dt.getFullYear();
   const hh=String(dt.getHours()).padStart(2,'0');
   const mi=String(dt.getMinutes()).padStart(2,'0');
-  return ${mm}/${dd}/${yyyy} ${hh}:${mi};
+  return `${mm}/${dd}/${yyyy} ${hh}:${mi}`;
 };
 
 const forceDateText = v => { const d=parseU(v); return (!d||isNaN(d)) ? (v??'') : formatTextDate(d); };
-const makeSheetNameFromDate = dt => { return ${String(dt.getMonth()+1).padStart(2,'0')}_${String(dt.getDate()).padStart(2,'0')}_${dt.getFullYear()}; };
+const makeSheetNameFromDate = dt => { return `${String(dt.getMonth()+1).padStart(2,'0')}_${String(dt.getDate()).padStart(2,'0')}_${dt.getFullYear()}`; };
 
 document.getElementById('run').addEventListener('click', async () => {
   const fileInput = document.getElementById('file');
@@ -176,8 +176,8 @@ document.getElementById('run').addEventListener('click', async () => {
   storedSheets = {};
 
   for (let f = 0; f < files.length; f++) {
-    const colId = col-${f};
-    logEl.innerHTML += <div class="log-column" id="${colId}"><b style="color:#00ffd0; border-bottom:1px solid #333; display:block; margin-bottom:5px;">${files[f].name}</b></div>;
+    const colId = `col-${f}`;
+    logEl.innerHTML += `<div class="log-column" id="${colId}"><b style="color:#00ffd0; border-bottom:1px solid #333; display:block; margin-bottom:5px;">${files[f].name}</b></div>`;
     const currentCol = document.getElementById(colId);
 
     try {
@@ -232,12 +232,12 @@ document.getElementById('run').addEventListener('click', async () => {
           });
         });
 
-        const sn = makeSheetNameFromDate(entry.realDate) + (files.length > 1 ?  (${f}) : "");
+        const sn = makeSheetNameFromDate(entry.realDate) + (files.length > 1 ? ` (${f})` : "");
         XLSX.utils.book_append_sheet(processedWB, XLSX.utils.aoa_to_sheet(allRows), sn);
         storedSheets[sn] = allRows;
-        currentCol.innerHTML += <span class="logClickable" onclick="showDetails('${sn}')">${sn} = ${sortedBatchKeys.length} / ${unitCount}</span>;
+        currentCol.innerHTML += `<span class="logClickable" onclick="showDetails('${sn}')">${sn} = ${sortedBatchKeys.length} / ${unitCount}</span>`;
       });
-    } catch(e) { currentCol.innerHTML += <div style="color:red;">Error: ${e.message}</div>; }
+    } catch(e) { currentCol.innerHTML += `<div style="color:red;">Error: ${e.message}</div>`; }
     document.getElementById('progress-bar').style.width = Math.floor(((f+1)/files.length)*100)+'%';
   }
   btnRun.disabled = false; btnRun.classList.remove('running'); btnRun.textContent = 'Run';
@@ -268,11 +268,11 @@ function showDetails(sn){
     merged[key].trips += 1;
   });
 
-  let html = <button class="vtsBtn" onclick="window.open('https://pauloisip123.github.io/buyoff/','_blank')">VTS</button>;
-  html += <b>${sn}</b><br><br>;
-  Object.keys(merged).sort().forEach(k => { html += ${k} = ${merged[k].trips} / ${merged[k].total}<br>; });
-  html += <br><b>FOR BUYOFF</b><br>;
-  Object.keys(exportCounts).forEach(k => { html += ${k} = ${exportCounts[k]}<br>; });
+  let html = `<button class="vtsBtn" onclick="window.open('https://pauloisip123.github.io/buyoff/','_blank')">VTS</button>`;
+  html += `<b>${sn}</b><br><br>`;
+  Object.keys(merged).sort().forEach(k => { html += `${k} = ${merged[k].trips} / ${merged[k].total}<br>`; });
+  html += `<br><b>FOR BUYOFF</b><br>`;
+  Object.keys(exportCounts).forEach(k => { html += `${k} = ${exportCounts[k]}<br>`; });
 
   document.getElementById("modalBox").innerHTML = html;
   document.getElementById("modalBg").style.display = 'flex';
@@ -291,7 +291,7 @@ function spinSlot() {
     const inv = setInterval(() => {
         cells.forEach(c => {
             const p = cars[Math.floor(Math.random()*cars.length)];
-            c.innerHTML = ${p.icon}<div class="car-label">${p.name}</div>;
+            c.innerHTML = `${p.icon}<div class="car-label">${p.name}</div>`;
         });
         if(++count > 15){
             clearInterval(inv);
