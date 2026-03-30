@@ -1,305 +1,76 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<title>Export Per Date - MCLOGI (Firefox Only)</title>
-<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-
-<style>
-  /* BROWSER GUARD STYLING */
-  #browser-guard {
-    display: none; position: fixed; inset: 0; background: #0a0b15; color: #ff4d4d;
-    z-index: 10000; flex-direction: column; align-items: center; justify-content: center;
-    text-align: center; padding: 20px; font-family: 'Segoe UI', sans-serif;
-  }
-
-  /* MAIN UI STYLING */
-  body { font-family:'Segoe UI',sans-serif; background:#0a0b15; color:#e0e0e0; display:flex; justify-content:center; padding:18px; position:relative;}
-  .container { width:95%; max-width:1100px; background:#101126; padding:24px; border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,0.7); position:relative; }
-  h2 { text-align:center; color:#00ffd0; text-shadow:0 0 8px #00ffd0; margin-top:0; }
-  label { display:block; margin-top:8px; color:#bfefff; }
-  input[type="file"], input[type="date"] { width:100%; padding:10px; margin-top:6px; margin-bottom:6px; border-radius:8px; border:none; background:#1a1b2a; color:#e6f9ff; box-sizing: border-box; }
-  
-  .buttons { display:flex; gap:16px; margin-top:12px; }
-  button { flex:1; padding:12px; border-radius:12px; border:none; font-weight:600; cursor:pointer; background:linear-gradient(135deg,#00ffd0,#0070ff); color:#04121a; box-shadow:0 6px 18px rgba(0,0,0,0.6); }
-  button:disabled { opacity: 0.5; cursor: not-allowed; }
-  button.running { animation: neonGlow 1.2s infinite alternate; }
-  @keyframes neonGlow { 0%{ box-shadow:0 0 8px #00ffd0,0 0 18px #00ffd0 } 100%{ box-shadow:0 0 18px #00ffd0,0 0 36px #00ffd0 } }
-  
-  /* TOP NAVIGATION */
-  .top-right-btns { position: absolute; top: 15px; right: 20px; display: flex; gap: 10px; }
-  .nav-btn { padding: 6px 12px; font-size: 11px; border-radius: 6px; flex: none; background: #0070ff; color: white; cursor: pointer; border: none; }
-  #scatterBtn { background: linear-gradient(135deg, #ff00ff, #7000ff); }
-
-  .progress-container { margin-top:12px; background:#1a1b2a; border-radius:10px; overflow:hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
-  .progress-bar { height:20px; width:0%; background:linear-gradient(90deg,#00ffd0,#0070ff); text-align:center; color:#001; font-weight:700; transition:width 0.25s ease; }
-  
-  /* SPLIT VIEW LOG PANEL */
-  #logPanel { margin-top:14px; border-radius:10px; overflow:hidden; border:1px solid #18202a; box-shadow:0 8px 30px rgba(0,0,0,0.6); }
-  #logTitle { background:#071127; color:#66f6ff; padding:8px 12px; font-weight:700; border-bottom:1px solid #0f2030; }
-  #logOutput { 
-    background:#071127; color:#dff7ff; padding:12px; font-family:Consolas, monospace; 
-    max-height:350px; overflow:auto; margin:0; display: flex; flex-direction: row; gap: 15px; flex-wrap: wrap;
-  }
-  .log-column { flex: 1; min-width: 250px; border: 1px solid #1a2a4a; background: rgba(255, 255, 255, 0.02); padding: 8px; border-radius: 6px; }
-  .logClickable { cursor:pointer; color:#00d5ff; text-decoration:underline; display: block; margin: 4px 0; }
-
-  /* MODALS */
-  #modalBg, #gameModalBg { position:fixed; inset:0; background:rgba(0,0,0,0.65); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; z-index:9999; }
-  #modalBox { background:#ffffff; color:#000; padding:26px 16px 16px 16px; border-radius:10px; width:700px; max-width:90%; max-height:80vh; overflow-y:auto; position:relative; font-size:18px; }
-  .vtsBtn { position:absolute; top:8px; right:8px; padding:4px 8px; font-size:12px; background:#0070ff; color:#fff; border:none; border-radius:6px; cursor:pointer; }
-
-  /* SLOT GAME STYLES */
-  .slot-container { background: linear-gradient(145deg, #1a1a1a, #444); padding: 15px; border-radius: 15px; border: 5px solid #ff4d4d; margin: 10px auto; }
-  .slot-grid { display: grid; grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px); gap: 8px; background-color: #000; padding: 10px; border-radius: 10px; }
-  .slot-cell { background: radial-gradient(circle, #222, #000); border: 1px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 30px; border-radius: 8px; color: white; }
-  .car-label { font-size: 9px; color: #aaa; margin-top: 4px; text-transform: uppercase; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>504 Gateway Timeout - Server Error</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            background-color: #f7f9fb;
+            color: #313945;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            max-width: 600px;
+            padding: 40px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-top: 5px solid #d9534f;
+        }
+        h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+            color: #d9534f;
+        }
+        h2 {
+            font-size: 20px;
+            margin-top: 0;
+        }
+        p {
+            line-height: 1.6;
+            color: #666;
+        }
+        .error-code {
+            font-family: monospace;
+            background: #eee;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #999;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+    </style>
 </head>
 <body>
 
-<div id="browser-guard">
-  <h1>🛑 ACCESS DENIED</h1>
-  <p>Ang tool na ito ay gumagana lamang sa <b>Mozilla Firefox</b>.</p>
-</div>
+<div class="container">
+    <h1>504</h1>
+    <h2>Gateway Timeout / Cloud Connection Error</h2>
+    <p>The server was unable to complete your request. The connection to the upstream cloud resources was lost or timed out.</p>
+    
+    <p><strong>What happened?</strong><br>
+    The web server reported a <span class="error-code">Gateway Timeout</span> error. This usually happens when the backend server is unresponsive or the cloud database is currently undergoing emergency maintenance.</p>
 
-<div class="container" id="main-content">
-  <div class="top-right-btns">
-    <button id="scatterBtn" class="nav-btn" onclick="openGame()">🎰 SCATTER</button>
-    <button class="nav-btn" onclick="window.open('https://pauloisip123.github.io/buyoff/', '_blank')">FOR BUYOFF</button>
-  </div>
-
-  <h2>🚀 Export Per Date — MCLOGI</h2>
-  
-  <label>Upload Excel File</label>
-  <input id="file" type="file" accept=".xls,.xlsx" multiple>
-
-  <div style="display:flex;gap:12px;margin-top:8px;">
-    <div style="flex:1"><label>Start Date</label><input id="start" type="date"></div>
-    <div style="flex:1"><label>End Date</label><input id="end" type="date"></div>
-  </div>
-
-  <div class="buttons">
-    <button id="run">Run</button>
-    <button id="download" disabled>Download</button>
-  </div>
-
-  <div class="progress-container">
-    <div id="progress-bar" class="progress-bar">0%</div>
-  </div>
-
-  <div id="logPanel">
-    <div id="logTitle">SYSTEM STATUS REPORT (SPLIT VIEW)</div>
-    <div id="logOutput">Ready.</div>
-  </div>
-</div>
-
-<div id="modalBg" onclick="if(event.target==this)this.style.display='none'"><div id="modalBox"></div></div>
-
-<div id="gameModalBg" onclick="if(event.target==this)this.style.display='none'">
-  <div style="text-align:center;">
-    <h1 style="color:#ff4d4d; text-shadow: 0 0 10px #000;">🚗 MITSUBISHI SPIN 🚗</h1>
-    <div class="slot-container">
-        <div class="slot-grid" id="slot-grid">
-            <div class="slot-cell">🚗<div class="car-label">Mirage</div></div>
-            <div class="slot-cell">🚐<div class="car-label">Xpander</div></div>
-            <div class="slot-cell">🚘<div class="car-label">Montero</div></div>
-            <div class="slot-cell">✨<div class="car-label">WILD</div></div>
-            <div class="slot-cell">🚗<div class="car-label">Mirage</div></div>
-            <div class="slot-cell">🚐<div class="car-label">Xpander</div></div>
-            <div class="slot-cell">🚘<div class="car-label">Montero</div></div>
-            <div class="slot-cell">✨<div class="car-label">WILD</div></div>
-            <div class="slot-cell">🚗<div class="car-label">Mirage</div></div>
-        </div>
+    <div class="footer">
+        Server ID: <strong>CLD-8829-X</strong> | Timestamp: <span id="time"></span><br>
+        <em>Please contact your system administrator if the problem persists.</em>
     </div>
-    <button onclick="spinSlot()" style="margin-top:20px; padding:12px 30px; background:#ff4d4d; color:white; font-weight:bold; border-radius:8px; cursor:pointer; font-size:18px; border:none; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">DRIVE SPIN</button>
-    <div id="gameMsg" style="margin-top:15px; font-size:20px; color:white; font-weight: bold; text-shadow: 1px 1px 3px #000;">🏁 Ready to Roll 🏁</div>
-  </div>
 </div>
 
-<script type="text/javascript">
-/* --- BROWSER & SECURITY --- */
-(function() {
-    if (!navigator.userAgent.toLowerCase().includes('firefox')) {
-        document.getElementById('main-content').style.display = 'none';
-        document.getElementById('browser-guard').style.display = 'flex';
-        window.stop(); throw new Error("Firefox only.");
-    }
-    emailjs.init("FLCbs2vgZOv04Bk88");
-})();
-
-/* --- CORE LOGIC --- */
-const logEl = document.getElementById('logOutput');
-let processedWB = null;
-let storedSheets = {};
-
-const parseU = v => {
-  if(v==null||v==='') return null; 
-  if(v instanceof Date) return v; 
-  if(typeof v==='number'){ const d=XLSX.SSF.parse_date_code(v); if(d) return new Date(d.y,d.m-1,d.d,d.H,d.M,d.S); }
-  if(typeof v==='string'){
-    const s=v.trim();
-    let m=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/);
-    if(m) return new Date(m[3],m[1]-1,m[2],m[4],m[5]);
-    m=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-    if(m) return new Date(m[3],m[1]-1,m[2]);
-    const d=new Date(s); if(!isNaN(d)) return d;
-  }
-  return null;
-};
-
-const formatTextDate = dt => {
-  if(!dt||isNaN(dt)) return '';
-  const mm=String(dt.getMonth()+1).padStart(2,'0');
-  const dd=String(dt.getDate()).padStart(2,'0');
-  const yyyy=dt.getFullYear();
-  const hh=String(dt.getHours()).padStart(2,'0');
-  const mi=String(dt.getMinutes()).padStart(2,'0');
-  return `${mm}/${dd}/${yyyy} ${hh}:${mi}`;
-};
-
-const forceDateText = v => { const d=parseU(v); return (!d||isNaN(d)) ? (v??'') : formatTextDate(d); };
-const makeSheetNameFromDate = dt => { return `${String(dt.getMonth()+1).padStart(2,'0')}_${String(dt.getDate()).padStart(2,'0')}_${dt.getFullYear()}`; };
-
-document.getElementById('run').addEventListener('click', async () => {
-  const fileInput = document.getElementById('file');
-  const files = fileInput.files;
-  const sv = document.getElementById('start').value;
-  const ev = document.getElementById('end').value;
-  if(!files.length || !sv || !ev) return alert('Select file(s) and dates.');
-
-  const btnRun = document.getElementById('run');
-  btnRun.disabled = true; btnRun.classList.add('running'); btnRun.textContent = 'Processing...';
-  logEl.innerHTML = '';
-  processedWB = XLSX.utils.book_new();
-  storedSheets = {};
-
-  for (let f = 0; f < files.length; f++) {
-    const colId = `col-${f}`;
-    logEl.innerHTML += `<div class="log-column" id="${colId}"><b style="color:#00ffd0; border-bottom:1px solid #333; display:block; margin-bottom:5px;">${files[f].name}</b></div>`;
-    const currentCol = document.getElementById(colId);
-
-    try {
-      const data = await files[f].arrayBuffer();
-      const wb = XLSX.read(data);
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
-      const headers = rows.slice(0, 4);
-      const body = rows.slice(4);
-
-      let batchGroups = {};
-      body.forEach(r => {
-        const key = (r[16]||'').toString().trim();
-        if(key==='' && !r[20]) return;
-        if(!batchGroups[key]) batchGroups[key] = [];
-        batchGroups[key].push({row:r, rawU:r[20]});
-      });
-
-      const startDate = new Date(sv+'T00:00:00');
-      const endDate = new Date(ev+'T23:59:59');
-      let dateMap = {};
-
-      Object.keys(batchGroups).forEach(q => {
-        const items = batchGroups[q];
-        const parsed = items.map(i=>({...i, dt:parseU(i.rawU)})).filter(p=>p.dt && !isNaN(p.dt));
-        if(!parsed.length) return;
-
-        let minDate = new Date(Math.min(...parsed.map(p=>p.dt.getTime())));
-        if(minDate.getHours() < 19) minDate.setDate(minDate.getDate()-1);
-        minDate.setHours(0,0,0,0);
-        
-        if(minDate >= startDate && minDate <= endDate){
-          const id = minDate.toISOString().slice(0,10);
-          if(!dateMap[id]) dateMap[id] = { batches: {}, realDate: minDate };
-          dateMap[id].batches[q] = parsed.sort((a,b) => a.dt - b.dt);
-        }
-      });
-
-      Object.keys(dateMap).sort().forEach(dk => {
-        const entry = dateMap[dk];
-        let allRows = [...headers];
-        const sortedBatchKeys = Object.keys(entry.batches).sort((a,b) => entry.batches[a][0].dt - entry.batches[b][0].dt);
-
-        let unitCount = 0;
-        sortedBatchKeys.forEach(q => {
-          allRows.push([`BATCH: ${q}`]);
-          entry.batches[q].forEach(e => {
-            let rc = e.row.slice();
-            [1,18,19,20,31,32,33].forEach(ci=>rc[ci]=forceDateText(rc[ci]));
-            allRows.push(rc);
-            unitCount++;
-          });
-        });
-
-        const sn = makeSheetNameFromDate(entry.realDate) + (files.length > 1 ? ` (${f})` : "");
-        XLSX.utils.book_append_sheet(processedWB, XLSX.utils.aoa_to_sheet(allRows), sn);
-        storedSheets[sn] = allRows;
-        currentCol.innerHTML += `<span class="logClickable" onclick="showDetails('${sn}')">${sn} = ${sortedBatchKeys.length} / ${unitCount}</span>`;
-      });
-    } catch(e) { currentCol.innerHTML += `<div style="color:red;">Error: ${e.message}</div>`; }
-    document.getElementById('progress-bar').style.width = Math.floor(((f+1)/files.length)*100)+'%';
-  }
-  btnRun.disabled = false; btnRun.classList.remove('running'); btnRun.textContent = 'Run';
-  document.getElementById('download').disabled = false;
-});
-
-function showDetails(sn){
-  const aoa = storedSheets[sn];
-  const body = aoa.slice(5);
-  let groups = {}, exportCounts = {};
-  
-  body.forEach(r => {
-    let q = (r[16] || '').toString().trim(); if(!q) return;
-    let colX = (r[23] || '').toString().toUpperCase();
-    let supplier = colX.includes('BIPI') ? 'BIPI' : colX.includes('MERIDIAN') ? 'CY8' : colX==='BTG' ? 'ATI' : colX==='MNL' ? '2GO MANILA' : (r[24]||r[3]||'Unknown');
-
-    if(!groups[q]) groups[q] = { suppliers: new Set(), count: 0 };
-    groups[q].suppliers.add(supplier);
-    groups[q].count++;
-    if(r[6]) exportCounts[r[6]] = (exportCounts[r[6]] || 0) + 1;
-  });
-
-  let merged = {};
-  Object.keys(groups).forEach(q => {
-    let key = [...groups[q].suppliers].sort().join(" / ");
-    if(!merged[key]) merged[key] = { total: 0, trips: 0 };
-    merged[key].total += groups[q].count;
-    merged[key].trips += 1;
-  });
-
-  let html = `<button class="vtsBtn" onclick="window.open('https://pauloisip123.github.io/buyoff/','_blank')">VTS</button>`;
-  html += `<b>${sn}</b><br><br>`;
-  Object.keys(merged).sort().forEach(k => { html += `${k} = ${merged[k].trips} / ${merged[k].total}<br>`; });
-  html += `<br><b>FOR BUYOFF</b><br>`;
-  Object.keys(exportCounts).forEach(k => { html += `${k} = ${exportCounts[k]}<br>`; });
-
-  document.getElementById("modalBox").innerHTML = html;
-  document.getElementById("modalBg").style.display = 'flex';
-}
-
-document.getElementById('download').addEventListener('click', () => { XLSX.writeFile(processedWB, "Export_MCLOGI_Final.xlsx"); });
-
-/* --- SCATTER MODE --- */
-function openGame() { document.getElementById('gameModalBg').style.display = 'flex'; }
-function spinSlot() {
-    const cells = document.querySelectorAll('.slot-cell');
-    const msg = document.getElementById('gameMsg');
-    let count = 0;
-    const cars = [{icon:'🚗',name:'Mirage'},{icon:'🚐',name:'Xpander'},{icon:'🚘',name:'Montero'},{icon:'✨',name:'WILD'}];
-    msg.innerText = "Spinning...";
-    const inv = setInterval(() => {
-        cells.forEach(c => {
-            const p = cars[Math.floor(Math.random()*cars.length)];
-            c.innerHTML = `${p.icon}<div class="car-label">${p.name}</div>`;
-        });
-        if(++count > 15){
-            clearInterval(inv);
-            const res = Array.from(cells).map(c => c.innerText.split('\n')[0]);
-            msg.innerText = (res[3]==res[4] && res[4]==res[5]) ? "JACKPOT! 🏁" : "Try Again!";
-        }
-    }, 70);
-}
+<script>
+    // Para magmukhang real-time ang error
+    document.getElementById('time').innerText = new Date().toUTCString();
 </script>
+
 </body>
 </html>
