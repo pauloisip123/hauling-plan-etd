@@ -206,7 +206,7 @@ document.getElementById('run').addEventListener('click', async () => {
         if(!parsed.length) return;
 
         let minDate = new Date(Math.min(...parsed.map(p=>p.dt.getTime())));
-        if(minDate.getHours() < 15) minDate.setDate(minDate.getDate()-1);
+        if(minDate.getHours() < 19) minDate.setDate(minDate.getDate()-1);
         minDate.setHours(0,0,0,0);
         
         if(minDate >= startDate && minDate <= endDate){
