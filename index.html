@@ -2,18 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>Export Per Date - MCLOGI (Firefox Only)</title>
+<title>Export Per Date - MCLOGI (All Browsers)</title>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <style>
-  /* BROWSER GUARD STYLING */
-  #browser-guard {
-    display: none; position: fixed; inset: 0; background: #0a0b15; color: #ff4d4d;
-    z-index: 10000; flex-direction: column; align-items: center; justify-content: center;
-    text-align: center; padding: 20px; font-family: 'Segoe UI', sans-serif;
-  }
-
   /* MAIN UI STYLING */
   body { font-family:'Segoe UI',sans-serif; background:#0a0b15; color:#e0e0e0; display:flex; justify-content:center; padding:18px; position:relative;}
   .container { width:95%; max-width:1100px; background:#101126; padding:24px; border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,0.7); position:relative; }
@@ -35,20 +29,25 @@
   .progress-container { margin-top:12px; background:#1a1b2a; border-radius:10px; overflow:hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
   .progress-bar { height:20px; width:0%; background:linear-gradient(90deg,#00ffd0,#0070ff); text-align:center; color:#001; font-weight:700; transition:width 0.25s ease; }
   
-  /* SPLIT VIEW LOG PANEL */
   #logPanel { margin-top:14px; border-radius:10px; overflow:hidden; border:1px solid #18202a; box-shadow:0 8px 30px rgba(0,0,0,0.6); }
   #logTitle { background:#071127; color:#66f6ff; padding:8px 12px; font-weight:700; border-bottom:1px solid #0f2030; }
-  #logOutput { 
-    background:#071127; color:#dff7ff; padding:12px; font-family:Consolas, monospace; 
-    max-height:350px; overflow:auto; margin:0; display: flex; flex-direction: row; gap: 15px; flex-wrap: wrap;
-  }
+  #logOutput { background:#071127; color:#dff7ff; padding:12px; font-family:Consolas, monospace; max-height:350px; overflow:auto; margin:0; display: flex; flex-direction: row; gap: 15px; flex-wrap: wrap; }
   .log-column { flex: 1; min-width: 250px; border: 1px solid #1a2a4a; background: rgba(255, 255, 255, 0.02); padding: 8px; border-radius: 6px; }
   .logClickable { cursor:pointer; color:#00d5ff; text-decoration:underline; display: block; margin: 4px 0; }
 
   /* MODALS */
   #modalBg, #gameModalBg { position:fixed; inset:0; background:rgba(0,0,0,0.65); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; z-index:9999; }
-  #modalBox { background:#ffffff; color:#000; padding:26px 16px 16px 16px; border-radius:10px; width:700px; max-width:90%; max-height:80vh; overflow-y:auto; position:relative; font-size:18px; }
-  .vtsBtn { position:absolute; top:8px; right:8px; padding:4px 8px; font-size:12px; background:#0070ff; color:#fff; border:none; border-radius:6px; cursor:pointer; }
+  #modalBox { background:#ffffff; color:#000; padding:55px 20px 20px 20px; border-radius:10px; width:550px; max-width:95%; max-height:85vh; overflow-y:auto; position:relative; font-size:16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+  
+  .vtsBtn { position:absolute; top:12px; right:12px; padding:6px 12px; font-size:11px; background:#0070ff; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight: bold; }
+  .copyBtn { position:absolute; top:12px; right:75px; padding:6px 12px; font-size:11px; background:#28a745; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight: bold; }
+  .shiftBtn { position:absolute; top:12px; left:12px; padding:6px 12px; font-size:11px; background:#6f42c1; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight: bold; }
+
+  /* SHIFT STYLING */
+  .shift-header { background: #f4f7fa; padding: 6px 10px; border-left: 4px solid #333; margin: 12px 0 8px 0; font-weight: bold; font-size: 13px; display: flex; justify-content: space-between; }
+  .night-shift { border-left-color: #002b5c; color: #002b5c; }
+  .day-shift { border-left-color: #f39c12; color: #a36200; }
+  .buyoff-item { font-size: 13px; color: #a52a2a; margin-bottom: 2px; }
 
   /* SLOT GAME STYLES */
   .slot-container { background: linear-gradient(145deg, #1a1a1a, #444); padding: 15px; border-radius: 15px; border: 5px solid #ff4d4d; margin: 10px auto; }
@@ -59,36 +58,23 @@
 </head>
 <body>
 
-<div id="browser-guard">
-  <h1>🛑 ACCESS DENIED</h1>
-  <p>Ang tool na ito ay gumagana lamang sa <b>Mozilla Firefox</b>.</p>
-</div>
-
 <div class="container" id="main-content">
   <div class="top-right-btns">
     <button id="scatterBtn" class="nav-btn" onclick="openGame()">🎰 SCATTER</button>
     <button class="nav-btn" onclick="window.open('https://pauloisip123.github.io/buyoff/', '_blank')">FOR BUYOFF</button>
   </div>
-
   <h2>🚀 Export Per Date — MCLOGI</h2>
-  
   <label>Upload Excel File</label>
   <input id="file" type="file" accept=".xls,.xlsx" multiple>
-
   <div style="display:flex;gap:12px;margin-top:8px;">
     <div style="flex:1"><label>Start Date</label><input id="start" type="date"></div>
     <div style="flex:1"><label>End Date</label><input id="end" type="date"></div>
   </div>
-
   <div class="buttons">
     <button id="run">Run</button>
     <button id="download" disabled>Download</button>
   </div>
-
-  <div class="progress-container">
-    <div id="progress-bar" class="progress-bar">0%</div>
-  </div>
-
+  <div class="progress-container"><div id="progress-bar" class="progress-bar">0%</div></div>
   <div id="logPanel">
     <div id="logTitle">SYSTEM STATUS REPORT (SPLIT VIEW)</div>
     <div id="logOutput">Ready.</div>
@@ -119,21 +105,9 @@
 </div>
 
 <script type="text/javascript">
-/* --- BROWSER & SECURITY --- */
-(function() {
-    if (!navigator.userAgent.toLowerCase().includes('firefox')) {
-        document.getElementById('main-content').style.display = 'none';
-        document.getElementById('browser-guard').style.display = 'flex';
-        window.stop(); throw new Error("Firefox only.");
-    }
-    emailjs.init("FLCbs2vgZOv04Bk88");
-})();
+(function() { emailjs.init("FLCbs2vgZOv04Bk88"); })();
 
-/* --- CORE LOGIC --- */
-const logEl = document.getElementById('logOutput');
-let processedWB = null;
-let storedSheets = {};
-
+/* --- HELPERS --- */
 const parseU = v => {
   if(v==null||v==='') return null; 
   if(v instanceof Date) return v; 
@@ -148,7 +122,6 @@ const parseU = v => {
   }
   return null;
 };
-
 const formatTextDate = dt => {
   if(!dt||isNaN(dt)) return '';
   const mm=String(dt.getMonth()+1).padStart(2,'0');
@@ -158,9 +131,13 @@ const formatTextDate = dt => {
   const mi=String(dt.getMinutes()).padStart(2,'0');
   return `${mm}/${dd}/${yyyy} ${hh}:${mi}`;
 };
-
 const forceDateText = v => { const d=parseU(v); return (!d||isNaN(d)) ? (v??'') : formatTextDate(d); };
 const makeSheetNameFromDate = dt => { return `${String(dt.getMonth()+1).padStart(2,'0')}_${String(dt.getDate()).padStart(2,'0')}_${dt.getFullYear()}`; };
+
+/* --- CORE --- */
+const logEl = document.getElementById('logOutput');
+let processedWB = null;
+let storedData = {}; // Detailed storage for shift switching
 
 document.getElementById('run').addEventListener('click', async () => {
   const fileInput = document.getElementById('file');
@@ -173,11 +150,11 @@ document.getElementById('run').addEventListener('click', async () => {
   btnRun.disabled = true; btnRun.classList.add('running'); btnRun.textContent = 'Processing...';
   logEl.innerHTML = '';
   processedWB = XLSX.utils.book_new();
-  storedSheets = {};
+  storedData = {};
 
   for (let f = 0; f < files.length; f++) {
     const colId = `col-${f}`;
-    logEl.innerHTML += `<div class="log-column" id="${colId}"><b style="color:#00ffd0; border-bottom:1px solid #333; display:block; margin-bottom:5px;">${files[f].name}</b></div>`;
+    logEl.innerHTML += `<div class="log-column" id="${colId}"><b style="color:#00ffd0;">${files[f].name}</b></div>`;
     const currentCol = document.getElementById(colId);
 
     try {
@@ -206,25 +183,26 @@ document.getElementById('run').addEventListener('click', async () => {
         if(!parsed.length) return;
 
         let minDate = new Date(Math.min(...parsed.map(p=>p.dt.getTime())));
-        if(minDate.getHours() < 19) minDate.setDate(minDate.getDate()-1);
-        minDate.setHours(0,0,0,0);
+        let sheetRef = new Date(minDate);
+        if(sheetRef.getHours() < 19) sheetRef.setDate(sheetRef.getDate()-1);
+        sheetRef.setHours(0,0,0,0);
         
-        if(minDate >= startDate && minDate <= endDate){
-          const id = minDate.toISOString().slice(0,10);
-          if(!dateMap[id]) dateMap[id] = { batches: {}, realDate: minDate };
-          dateMap[id].batches[q] = parsed.sort((a,b) => a.dt - b.dt);
+        if(sheetRef >= startDate && sheetRef <= endDate){
+          const id = sheetRef.toISOString().slice(0,10);
+          if(!dateMap[id]) dateMap[id] = { batches: {}, realDate: sheetRef };
+          dateMap[id].batches[q] = { items: parsed.sort((a,b)=>a.dt-b.dt), minDate: minDate };
         }
       });
 
       Object.keys(dateMap).sort().forEach(dk => {
         const entry = dateMap[dk];
         let allRows = [...headers];
-        const sortedBatchKeys = Object.keys(entry.batches).sort((a,b) => entry.batches[a][0].dt - entry.batches[b][0].dt);
+        const sortedKeys = Object.keys(entry.batches).sort((a,b) => entry.batches[a].minDate - entry.batches[b].minDate);
 
         let unitCount = 0;
-        sortedBatchKeys.forEach(q => {
+        sortedKeys.forEach(q => {
           allRows.push([`BATCH: ${q}`]);
-          entry.batches[q].forEach(e => {
+          entry.batches[q].items.forEach(e => {
             let rc = e.row.slice();
             [1,18,19,20,31,32,33].forEach(ci=>rc[ci]=forceDateText(rc[ci]));
             allRows.push(rc);
@@ -234,8 +212,9 @@ document.getElementById('run').addEventListener('click', async () => {
 
         const sn = makeSheetNameFromDate(entry.realDate) + (files.length > 1 ? ` (${f})` : "");
         XLSX.utils.book_append_sheet(processedWB, XLSX.utils.aoa_to_sheet(allRows), sn);
-        storedSheets[sn] = allRows;
-        currentCol.innerHTML += `<span class="logClickable" onclick="showDetails('${sn}')">${sn} = ${sortedBatchKeys.length} / ${unitCount}</span>`;
+        storedData[sn] = { batches: entry.batches, realDate: entry.realDate, sortedKeys, allRows };
+        
+        currentCol.innerHTML += `<span class="logClickable" onclick="showDetails('${sn}')">${sn} = ${sortedKeys.length} / ${unitCount}</span>`;
       });
     } catch(e) { currentCol.innerHTML += `<div style="color:red;">Error: ${e.message}</div>`; }
     document.getElementById('progress-bar').style.width = Math.floor(((f+1)/files.length)*100)+'%';
@@ -244,16 +223,16 @@ document.getElementById('run').addEventListener('click', async () => {
   document.getElementById('download').disabled = false;
 });
 
+/* --- ORIGINAL MODAL VIEW --- */
 function showDetails(sn){
-  const aoa = storedSheets[sn];
-  const body = aoa.slice(5);
+  const info = storedData[sn];
+  const bodyRows = info.allRows.slice(5);
   let groups = {}, exportCounts = {};
   
-  body.forEach(r => {
+  bodyRows.forEach(r => {
     let q = (r[16] || '').toString().trim(); if(!q) return;
     let colX = (r[23] || '').toString().toUpperCase();
     let supplier = colX.includes('BIPI') ? 'BIPI' : colX.includes('MERIDIAN') ? 'CY8' : colX==='BTG' ? 'ATI' : colX==='MNL' ? '2GO MANILA' : (r[24]||r[3]||'Unknown');
-
     if(!groups[q]) groups[q] = { suppliers: new Set(), count: 0 };
     groups[q].suppliers.add(supplier);
     groups[q].count++;
@@ -268,19 +247,99 @@ function showDetails(sn){
     merged[key].trips += 1;
   });
 
-  let html = `<button class="vtsBtn" onclick="window.open('https://pauloisip123.github.io/buyoff/','_blank')">VTS</button>`;
-  html += `<b>${sn}</b><br><br>`;
-  Object.keys(merged).sort().forEach(k => { html += `${k} = ${merged[k].trips} / ${merged[k].total}<br>`; });
-  html += `<br><b>FOR BUYOFF</b><br>`;
-  Object.keys(exportCounts).forEach(k => { html += `${k} = ${exportCounts[k]}<br>`; });
+  let html = `<button class="shiftBtn" onclick="showShiftDetails('${sn}')">SHIFT DELIVERY DETAILS</button>`;
+  html += `<button class="vtsBtn" onclick="window.open('https://pauloisip123.github.io/buyoff/','_blank')">VTS</button>`;
+  html += `<button id="copyBtn" class="copyBtn" onclick="copyModalToClipboard()">📋 COPY IMAGE</button>`;
+  
+  html += `<div id="captureArea" style="padding:20px; background:white; color:black; border-radius:4px; font-family: 'Segoe UI', Arial, sans-serif;">`;
+  html += `<div style="border-left: 5px solid #0070ff; padding-left: 10px;">`;
+  html += `<b style="font-size:20px; color:#0056b3;">${sn}</b><br>`;
+  html += `<span style="font-size:12px; color:#666;">Report Generated via MCLOGI Tool</span>`;
+  html += `</div><hr style="border:0; border-top:1px solid #eee; margin:15px 0;">`;
+  
+  Object.keys(merged).sort().forEach(k => { 
+    html += `<div style="margin-bottom:5px;"><b>${k}</b> <span style="color:#444;">= ${merged[k].trips} trips / ${merged[k].total} units</span></div>`; 
+  });
+  
+  html += `<br><div style="background:#fff5f5; padding:10px; border-radius:6px; border:1px solid #ffdada;">`;
+  html += `<b style="color:#d9534f;">FOR BUYOFF SUMMARY</b><br>`;
+  Object.keys(exportCounts).forEach(k => { 
+    html += `<div>${k}: <b>${exportCounts[k]}</b></div>`; 
+  });
+  html += `</div></div>`;
 
   document.getElementById("modalBox").innerHTML = html;
   document.getElementById("modalBg").style.display = 'flex';
 }
 
+/* --- SHIFT DELIVERY VIEW --- */
+function showShiftDetails(sn) {
+  const { batches, realDate, sortedKeys } = storedData[sn];
+  const nightStart = new Date(realDate); nightStart.setHours(19, 0, 0);
+  const dayStart = new Date(realDate); dayStart.setDate(dayStart.getDate() + 1); dayStart.setHours(7, 0, 0);
+
+  let nightSummary = {}, daySummary = {}, totalBuyoff = {};
+
+  sortedKeys.forEach(q => {
+    const batch = batches[q];
+    const isNight = (batch.minDate >= nightStart && batch.minDate < dayStart);
+    let target = isNight ? nightSummary : daySummary;
+
+    batch.items.forEach(e => {
+      let r = e.row;
+      let colX = (r[23] || '').toString().toUpperCase();
+      let supplier = colX.includes('BIPI') ? 'BIPI' : colX.includes('MERIDIAN') ? 'CY8' : colX==='BTG' ? 'ATI' : colX==='MNL' ? '2GO MANILA' : (r[24]||r[3]||'Unknown');
+      if(!target[q]) target[q] = { suppliers: new Set(), count: 0 };
+      target[q].suppliers.add(supplier);
+      target[q].count++;
+      if(r[6]) totalBuyoff[r[6]] = (totalBuyoff[r[6]] || 0) + 1;
+    });
+  });
+
+  const renderTrips = (summary) => {
+    let m = {};
+    Object.keys(summary).forEach(q => {
+      let k = [...summary[q].suppliers].sort().join(" / ");
+      if(!m[k]) m[k] = { total: 0, trips: 0 };
+      m[k].total += summary[q].count; m[k].trips += 1;
+    });
+    let h = "";
+    Object.keys(m).sort().forEach(k => { h += `<div><b>${k}</b> = ${m[k].trips} / ${m[k].total}</div>`; });
+    return h || "<div>No data.</div>";
+  };
+
+  let html = `<button class="shiftBtn" style="background:#444" onclick="showDetails('${sn}')">⬅️ BACK TO SUMMARY</button>`;
+  html += `<button id="copyBtn" class="copyBtn" onclick="copyModalToClipboard()">📋 COPY IMAGE</button>`;
+  html += `<div id="captureArea" style="padding:20px; background:white; color:black; border-radius:4px;">`;
+  html += `<div style="text-align:center; font-weight:bold; font-size:16px;">MCLOGI DELIVERY REPORT</div>`;
+  html += `<div style="text-align:center; font-size:12px; color:#666;">${sn}</div><hr>`;
+  html += `<div class="shift-header night-shift"><span>🌙 NIGHT SHIFT</span> <small>7PM-7AM</small></div>` + renderTrips(nightSummary);
+  html += `<div class="shift-header day-shift"><span>☀️ DAY SHIFT</span> <small>7AM-7PM</small></div>` + renderTrips(daySummary);
+  html += `<hr><div style="font-weight:bold; color:#a52a2a; margin-top:10px;">Buyoff:</div>`;
+  Object.keys(totalBuyoff).sort().forEach(m => { html += `<div class="buyoff-item">${m} VDC:<b>${totalBuyoff[m]}</b></div>`; });
+  html += `</div>`;
+
+  document.getElementById("modalBox").innerHTML = html;
+}
+
+/* --- UTILS --- */
+async function copyModalToClipboard() {
+  const btn = document.getElementById('copyBtn');
+  const area = document.getElementById('captureArea');
+  btn.innerText = "⏳ Wait...";
+  try {
+    const canvas = await html2canvas(area, { scale: 2 });
+    canvas.toBlob(async (blob) => {
+      const item = new ClipboardItem({ "image/png": blob });
+      await navigator.clipboard.write([item]);
+      btn.innerText = "✅ COPIED";
+      setTimeout(() => btn.innerText = "📋 COPY IMAGE", 2000);
+    });
+  } catch (e) { alert("Error copying image."); btn.innerText = "📋 COPY IMAGE"; }
+}
+
 document.getElementById('download').addEventListener('click', () => { XLSX.writeFile(processedWB, "Export_MCLOGI_Final.xlsx"); });
 
-/* --- SCATTER MODE --- */
 function openGame() { document.getElementById('gameModalBg').style.display = 'flex'; }
 function spinSlot() {
     const cells = document.querySelectorAll('.slot-cell');
