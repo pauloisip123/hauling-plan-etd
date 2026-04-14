@@ -8,11 +8,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <style>
-  /* MAIN UI STYLING */
+  /* MAIN UI STYLING (ORIGINAL) */
   body { font-family:'Segoe UI',sans-serif; background:#0a0b15; color:#e0e0e0; display:flex; justify-content:center; padding:18px; position:relative;}
   .container { width:95%; max-width:1100px; background:#101126; padding:24px; border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,0.7); position:relative; }
   h2 { text-align:center; color:#00ffd0; text-shadow:0 0 8px #00ffd0; margin-top:0; }
-  label { display:block; margin-top:8px; color:#bfefff; }
+  label { display:block; margin-top:8px; color:#bfefff; font-size: 13px; font-weight: bold; }
   input[type="file"], input[type="date"] { width:100%; padding:10px; margin-top:6px; margin-bottom:6px; border-radius:8px; border:none; background:#1a1b2a; color:#e6f9ff; box-sizing: border-box; }
   
   .buttons { display:flex; gap:16px; margin-top:12px; }
@@ -21,6 +21,11 @@
   button.running { animation: neonGlow 1.2s infinite alternate; }
   @keyframes neonGlow { 0%{ box-shadow:0 0 8px #00ffd0,0 0 18px #00ffd0 } 100%{ box-shadow:0 0 18px #00ffd0,0 0 36px #00ffd0 } }
   
+  /* COMPARISON UI COMPONENTS */
+  #compareToggleBtn { background: transparent; border: 1px solid #00ffd0; color: #00ffd0; width: auto; flex: none; padding: 5px 15px; margin-bottom: 10px; font-size: 11px; }
+  .comparison-area { display: none; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; padding: 15px; background: rgba(0,255,208,0.05); border-radius: 10px; border: 1px dashed #00ffd0; }
+  #changesBtn { background: linear-gradient(135deg, #ff7b00, #ffaa00); color: white; display: none; }
+
   .top-right-btns { position: absolute; top: 15px; right: 20px; display: flex; gap: 10px; }
   .nav-btn { padding: 6px 12px; font-size: 11px; border-radius: 6px; flex: none; background: #0070ff; color: white; cursor: pointer; border: none; }
   #scatterBtn { background: linear-gradient(135deg, #ff00ff, #7000ff); }
@@ -50,6 +55,10 @@
   .slot-grid { display: grid; grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px); gap: 8px; background-color: #000; padding: 10px; border-radius: 10px; }
   .slot-cell { background: radial-gradient(circle, #222, #000); border: 1px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 30px; border-radius: 8px; color: white; }
   .car-label { font-size: 9px; color: #aaa; margin-top: 4px; text-transform: uppercase; }
+  
+  .diff-table { width:100%; border-collapse: collapse; margin-top:10px; font-size:13px; }
+  .diff-table th { background:#0070ff; color:white; padding:8px; border:1px solid #ccc; }
+  .diff-table td { padding:8px; border:1px solid #ccc; text-align:center; }
 </style>
 </head>
 <body>
@@ -60,17 +69,38 @@
     <button class="nav-btn" onclick="window.open('https://pauloisip123.github.io/buyoff/', '_blank')">FOR BUYOFF</button>
   </div>
   <h2>🚀 Export Per Date — MCLOGI</h2>
-  <label>Upload Excel File</label>
-  <input id="file" type="file" accept=".xls,.xlsx" multiple>
+  
+  <button id="compareToggleBtn" onclick="toggleComparison()">➕ SHOW COMPARISON</button>
+
+  <div id="standardInput">
+    <label>Upload Excel File(s)</label>
+    <input id="file" type="file" accept=".xls,.xlsx" multiple>
+  </div>
+
+  <div id="comparisonArea" class="comparison-area">
+    <div>
+      <label style="color:#00ffd0;">[NEW] Left Upload (Latest)</label>
+      <input id="fileNew" type="file" accept=".xls,.xlsx">
+    </div>
+    <div>
+      <label style="color:#ffaa00;">[OLD] Right Upload (Previous)</label>
+      <input id="fileOld" type="file" accept=".xls,.xlsx">
+    </div>
+  </div>
+
   <div style="display:flex;gap:12px;margin-top:8px;">
     <div style="flex:1"><label>Start Date</label><input id="start" type="date"></div>
     <div style="flex:1"><label>End Date</label><input id="end" type="date"></div>
   </div>
+
   <div class="buttons">
     <button id="run">Run</button>
     <button id="download" disabled>Download</button>
+    <button id="changesBtn">Changes</button>
   </div>
+
   <div class="progress-container"><div id="progress-bar" class="progress-bar">0%</div></div>
+
   <div id="logPanel">
     <div id="logTitle">SYSTEM STATUS REPORT (SPLIT VIEW)</div>
     <div id="logOutput">Ready.</div>
@@ -103,6 +133,32 @@
 <script type="text/javascript">
 (function() { emailjs.init("FLCbs2vgZOv04Bk88"); })();
 
+/* --- GLOBAL STATE --- */
+let isCompareMode = false;
+let storedData = {};
+let fileSnapshots = [null, null]; // [0]=Old, [1]=New
+let processedWB = null;
+
+function toggleComparison() {
+  isCompareMode = !isCompareMode;
+  const area = document.getElementById('comparisonArea');
+  const std = document.getElementById('standardInput');
+  const btn = document.getElementById('compareToggleBtn');
+  const chg = document.getElementById('changesBtn');
+  
+  if(isCompareMode) {
+    area.style.display = 'grid';
+    std.style.display = 'none';
+    chg.style.display = 'block';
+    btn.innerText = '➖ HIDE COMPARISON';
+  } else {
+    area.style.display = 'none';
+    std.style.display = 'block';
+    chg.style.display = 'none';
+    btn.innerText = '➕ SHOW COMPARISON';
+  }
+}
+
 /* --- HELPERS --- */
 const parseU = v => {
   if(v==null||v==='') return null; 
@@ -130,31 +186,50 @@ const formatTextDate = dt => {
 const forceDateText = v => { const d=parseU(v); return (!d||isNaN(d)) ? (v??'') : formatTextDate(d); };
 const makeSheetNameFromDate = dt => { return `${String(dt.getMonth()+1).padStart(2,'0')}_${String(dt.getDate()).padStart(2,'0')}_${dt.getFullYear()}`; };
 
-/* --- CORE --- */
-const logEl = document.getElementById('logOutput');
-let processedWB = null;
-let storedData = {};
+const getSupplier = (r) => {
+  let colX = (r[23] || '').toString().toUpperCase();
+  if(colX.includes('BIPI')) return 'BIPI';
+  if(colX.includes('MERIDIAN')) return 'CY8';
+  if(colX === 'BTG') return 'ATI';
+  if(colX === 'MNL') return '2GO MANILA';
+  return (r[24] || r[3] || 'Unknown');
+};
 
+/* --- MAIN PROCESS --- */
 document.getElementById('run').addEventListener('click', async () => {
-  const fileInput = document.getElementById('file');
-  const files = fileInput.files;
   const sv = document.getElementById('start').value;
   const ev = document.getElementById('end').value;
-  if(!files.length || !sv || !ev) return alert('Select file(s) and dates.');
+  if(!sv || !ev) return alert('Select dates.');
 
+  let files = [];
+  if(isCompareMode) {
+    const fNew = document.getElementById('fileNew').files[0];
+    const fOld = document.getElementById('fileOld').files[0];
+    if(fNew) files.push({file: fNew, type: 'NEW'});
+    if(fOld) files.push({file: fOld, type: 'OLD'});
+  } else {
+    Array.from(document.getElementById('file').files).forEach(f => files.push({file: f, type: 'STD'}));
+  }
+
+  if(!files.length) return alert('No file selected.');
+
+  const logEl = document.getElementById('logOutput');
   const btnRun = document.getElementById('run');
   btnRun.disabled = true; btnRun.classList.add('running'); btnRun.textContent = 'Processing...';
   logEl.innerHTML = '';
   processedWB = XLSX.utils.book_new();
   storedData = {};
+  fileSnapshots = [null, null];
 
   for (let f = 0; f < files.length; f++) {
+    const fileObj = files[f];
     const colId = `col-${f}`;
-    logEl.innerHTML += `<div class="log-column" id="${colId}"><b style="color:#00ffd0;">${files[f].name}</b></div>`;
+    const fileLabel = fileObj.type === 'STD' ? fileObj.file.name : `[${fileObj.type}] ${fileObj.file.name}`;
+    logEl.innerHTML += `<div class="log-column" id="${colId}"><b style="color:#00ffd0;">${fileLabel}</b><hr></div>`;
     const currentCol = document.getElementById(colId);
 
     try {
-      const data = await files[f].arrayBuffer();
+      const data = await fileObj.file.arrayBuffer();
       const wb = XLSX.read(data);
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
@@ -181,16 +256,20 @@ document.getElementById('run').addEventListener('click', async () => {
         let minDate = new Date(Math.min(...parsed.map(p=>p.dt.getTime())));
         let sheetRef = new Date(minDate);
         
-        // ORIGINAL CUTOFF: 7:00 PM (19:00)
+        // --- 7:00 PM CUTOFF LOGIC (CONSISTENT FOR ALL MODES) ---
         if(sheetRef.getHours() < 19) sheetRef.setDate(sheetRef.getDate()-1);
         sheetRef.setHours(0,0,0,0);
         
         if(sheetRef >= startDate && sheetRef <= endDate){
-          const id = sheetRef.toISOString().slice(0,10);
-          if(!dateMap[id]) dateMap[id] = { batches: {}, realDate: sheetRef };
+          const id = makeSheetNameFromDate(sheetRef); 
+          if(!dateMap[id]) dateMap[id] = { batches: {}, realDate: new Date(sheetRef) };
           dateMap[id].batches[q] = { items: parsed.sort((a,b)=>a.dt-b.dt), minDate: minDate };
         }
       });
+
+      // Storage for Comparison
+      if(fileObj.type === 'NEW') fileSnapshots[1] = { dateMap };
+      if(fileObj.type === 'OLD') fileSnapshots[0] = { dateMap };
 
       Object.keys(dateMap).sort().forEach(dk => {
         const entry = dateMap[dk];
@@ -208,20 +287,22 @@ document.getElementById('run').addEventListener('click', async () => {
           });
         });
 
-        const sn = makeSheetNameFromDate(entry.realDate) + (files.length > 1 ? ` (${f})` : "");
-        XLSX.utils.book_append_sheet(processedWB, XLSX.utils.aoa_to_sheet(allRows), sn);
+        const sn = dk + (files.length > 1 ? ` (${f})` : "");
+        XLSX.utils.book_append_sheet(processedWB, XLSX.utils.aoa_to_sheet(allRows), sn.substring(0,31));
         storedData[sn] = { batches: entry.batches, realDate: entry.realDate, sortedKeys, allRows };
         
-        currentCol.innerHTML += `<span class="logClickable" onclick="showDetails('${sn}')">${sn} = ${sortedKeys.length} / ${unitCount}</span>`;
+        currentCol.innerHTML += `<span class="logClickable" onclick="showDetails('${sn}')">${dk} = ${sortedKeys.length} / ${unitCount}</span>`;
       });
-    } catch(e) { currentCol.innerHTML += `<div style="color:red;">Error: ${e.message}</div>`; }
+    } catch(e) { 
+      currentCol.innerHTML += `<div style="color:red;">Error: ${e.message}</div>`; 
+    }
     document.getElementById('progress-bar').style.width = Math.floor(((f+1)/files.length)*100)+'%';
   }
   btnRun.disabled = false; btnRun.classList.remove('running'); btnRun.textContent = 'Run';
   document.getElementById('download').disabled = false;
 });
 
-/* --- ORIGINAL MODAL VIEW --- */
+/* --- MODAL DISPLAY --- */
 function showDetails(sn){
   const info = storedData[sn];
   const bodyRows = info.allRows.slice(5);
@@ -229,124 +310,133 @@ function showDetails(sn){
   
   bodyRows.forEach(r => {
     let q = (r[16] || '').toString().trim(); if(!q) return;
-    let colX = (r[23] || '').toString().toUpperCase();
-    let supplier = colX.includes('BIPI') ? 'BIPI' : colX.includes('MERIDIAN') ? 'CY8' : colX==='BTG' ? 'ATI' : colX==='MNL' ? '2GO MANILA' : (r[24]||r[3]||'Unknown');
-    if(!groups[q]) groups[q] = { suppliers: new Set(), count: 0 };
-    groups[q].suppliers.add(supplier);
+    let supplier = getSupplier(r);
+    if(!groups[q]) groups[q] = { sups: new Set(), count: 0 };
+    groups[q].sups.add(supplier);
     groups[q].count++;
     if(r[6]) exportCounts[r[6]] = (exportCounts[r[6]] || 0) + 1;
   });
 
   let merged = {};
   Object.keys(groups).forEach(q => {
-    let key = [...groups[q].suppliers].sort().join(" / ");
-    if(!merged[key]) merged[key] = { total: 0, trips: 0 };
-    merged[key].total += groups[q].count;
-    merged[key].trips += 1;
+    let key = [...groups[q].sups].sort().join(" / ");
+    if(!merged[key]) merged[key] = { u: 0, t: 0 };
+    merged[key].u += groups[q].count; merged[key].t++;
   });
 
-  let html = `<button class="shiftBtn" onclick="showShiftDetails('${sn}')">SHIFT DELIVERY DETAILS</button>`;
+  let html = `<button class="shiftBtn" onclick="showShiftDetails('${sn}')">SHIFT DETAILS</button>`;
   html += `<button class="vtsBtn" onclick="window.open('https://pauloisip123.github.io/buyoff/','_blank')">VTS</button>`;
   html += `<button id="copyBtn" class="copyBtn" onclick="copyModalToClipboard()">📋 COPY IMAGE</button>`;
-  
   html += `<div id="captureArea" style="padding:20px; background:white; color:black; border-radius:4px; font-family: 'Segoe UI', Arial, sans-serif;">`;
-  html += `<div style="border-left: 5px solid #0070ff; padding-left: 10px;">`;
-  html += `<b style="font-size:20px; color:#0056b3;">${sn}</b><br>`;
-  html += `<span style="font-size:12px; color:#666;">Report Generated via MCLOGI Tool</span>`;
-  html += `</div><hr style="border:0; border-top:1px solid #eee; margin:15px 0;">`;
-  
+  html += `<div style="border-left: 5px solid #0070ff; padding-left: 10px;"><b style="font-size:18px;">${sn}</b></div><hr>`;
   Object.keys(merged).sort().forEach(k => { 
-    html += `<div style="margin-bottom:5px;"><b>${k}</b> <span style="color:#444;">= ${merged[k].trips} trips / ${merged[k].total} units</span></div>`; 
+    html += `<div><b>${k}</b> = ${merged[k].t} trips / ${merged[k].u} units</div>`; 
   });
-  
-  html += `<br><div style="background:#fff5f5; padding:10px; border-radius:6px; border:1px solid #ffdada;">`;
-  html += `<b style="color:#d9534f;">FOR BUYOFF SUMMARY</b><br>`;
-  Object.keys(exportCounts).forEach(k => { 
-    html += `<div>${k}: <b>${exportCounts[k]}</b></div>`; 
-  });
+  html += `<br><div style="background:#fff5f5; padding:10px; border:1px solid #ffdada;"><b>BUYOFF SUMMARY</b><br>`;
+  Object.keys(exportCounts).forEach(k => html += `<div>${k}: <b>${exportCounts[k]}</b></div>`);
   html += `</div></div>`;
 
   document.getElementById("modalBox").innerHTML = html;
   document.getElementById("modalBg").style.display = 'flex';
 }
 
-/* --- MODAL SHIFT DELIVERY (6PM-6AM CUTOFF) --- */
 function showShiftDetails(sn) {
   const { batches, realDate, sortedKeys } = storedData[sn];
+  const nightStart = new Date(realDate); nightStart.setHours(18, 0, 0);
+  const dayStart = new Date(realDate); dayStart.setDate(dayStart.getDate() + 1); dayStart.setHours(6, 0, 0);
 
-  // MODAL SPECIFIC CUTOFF:
-  // Night: 6:00 PM (18:00) to 5:59 AM next day
-  // Day: 6:00 AM (06:00) to 6:59 PM (18:59) same day cycle
-  
-  const nightStart = new Date(realDate); 
-  nightStart.setHours(18, 0, 0); // 6:00 PM
-
-  const dayStart = new Date(realDate); 
-  dayStart.setDate(dayStart.getDate() + 1); 
-  dayStart.setHours(6, 0, 0); // 6:00 AM kinabukasan
-
-  let nightSummary = {}, daySummary = {}, totalBuyoff = {};
-
+  let night = {}, day = {}, buyoff = {};
   sortedKeys.forEach(q => {
-    const batch = batches[q];
-    // Ang logic dito ay para sa pag-display lang sa modal
-    const isNight = (batch.minDate >= nightStart && batch.minDate < dayStart);
-    let target = isNight ? nightSummary : daySummary;
-
-    batch.items.forEach(e => {
-      let r = e.row;
-      let colX = (r[23] || '').toString().toUpperCase();
-      let supplier = colX.includes('BIPI') ? 'BIPI' : colX.includes('MERIDIAN') ? 'CY8' : colX==='BTG' ? 'ATI' : colX==='MNL' ? '2GO MANILA' : (r[24]||r[3]||'Unknown');
-      if(!target[q]) target[q] = { suppliers: new Set(), count: 0 };
-      target[q].suppliers.add(supplier);
-      target[q].count++;
-      if(r[6]) totalBuyoff[r[6]] = (totalBuyoff[r[6]] || 0) + 1;
+    const b = batches[q];
+    const isNight = (b.minDate >= nightStart && b.minDate < dayStart);
+    let target = isNight ? night : day;
+    b.items.forEach(e => {
+      let sup = getSupplier(e.row);
+      if(!target[q]) target[q] = { sups: new Set(), count: 0 };
+      target[q].sups.add(sup); target[q].count++;
+      if(e.row[6]) buyoff[e.row[6]] = (buyoff[e.row[6]]||0)+1;
     });
   });
 
-  const renderTrips = (summary) => {
+  const render = (s) => {
     let m = {};
-    Object.keys(summary).forEach(q => {
-      let k = [...summary[q].suppliers].sort().join(" / ");
-      if(!m[k]) m[k] = { total: 0, trips: 0 };
-      m[k].total += summary[q].count; m[k].trips += 1;
+    Object.keys(s).forEach(q => {
+      let k = [...s[q].sups].sort().join(" / ");
+      if(!m[k]) m[k] = { u: 0, t: 0 }; m[k].u += s[q].count; m[k].t++;
     });
     let h = "";
-    Object.keys(m).sort().forEach(k => { h += `<div><b>${k}</b> = ${m[k].trips} / ${m[k].total}</div>`; });
-    return h || "<div>No data.</div>";
+    Object.keys(m).sort().forEach(k => { h += `<div><b>${k}</b> = ${m[k].t} / ${m[k].u}</div>`; });
+    return h || "No data";
   };
 
-  let html = `<button class="shiftBtn" style="background:#444" onclick="showDetails('${sn}')">⬅️ BACK TO SUMMARY</button>`;
-  html += `<button id="copyBtn" class="copyBtn" onclick="copyModalToClipboard()">📋 COPY IMAGE</button>`;
-  html += `<div id="captureArea" style="padding:20px; background:white; color:black; border-radius:4px;">`;
-  html += `<div style="text-align:center; font-weight:bold; font-size:16px;">MCLOGI DELIVERY REPORT</div>`;
-  html += `<div style="text-align:center; font-size:12px; color:#666;">${sn}</div><hr>`;
-  html += `<div class="shift-header night-shift"><span>🌙 NIGHT SHIFT</span> <small>6PM-6AM</small></div>` + renderTrips(nightSummary);
-  html += `<div class="shift-header day-shift"><span>☀️ DAY SHIFT</span> <small>6AM-7PM</small></div>` + renderTrips(daySummary);
-  html += `<hr><div style="font-weight:bold; color:#a52a2a; margin-top:10px;">Buyoff:</div>`;
-  Object.keys(totalBuyoff).sort().forEach(m => { html += `<div class="buyoff-item">${m} VDC:<b>${totalBuyoff[m]}</b></div>`; });
-  html += `</div>`;
-
-  document.getElementById("modalBox").innerHTML = html;
+  document.getElementById("modalBox").innerHTML = `
+    <button class="shiftBtn" style="background:#444" onclick="showDetails('${sn}')">⬅️ BACK</button>
+    <button id="copyBtn" class="copyBtn" onclick="copyModalToClipboard()">📋 COPY IMAGE</button>
+    <div id="captureArea" style="padding:20px; background:white; color:black;">
+      <div style="text-align:center; font-weight:bold;">${sn}</div><hr>
+      <div class="shift-header night-shift"><span>🌙 NIGHT SHIFT</span> <small>6PM-6AM</small></div>${render(night)}
+      <div class="shift-header day-shift"><span>☀️ DAY SHIFT</span> <small>6AM-7PM</small></div>${render(day)}
+    </div>`;
 }
 
-/* --- UTILS --- */
+/* --- COMPARISON LOGIC --- */
+document.getElementById('changesBtn').addEventListener('click', () => {
+  const oldM = fileSnapshots[0]?.dateMap, newM = fileSnapshots[1]?.dateMap;
+  if(!oldM || !newM) return alert("Run both NEW and OLD files first.");
+
+  const allDates = Array.from(new Set([...Object.keys(oldM), ...Object.keys(newM)])).sort();
+  let html = `<h3>Changes Comparison Report</h3><hr>`;
+
+  allDates.forEach(dk => {
+    const sum = (d) => {
+      if(!d || !d[dk]) return {};
+      let s = {};
+      Object.keys(d[dk].batches).forEach(q => {
+        let sup = getSupplier(d[dk].batches[q].items[0].row);
+        if(!s[sup]) s[sup] = { t:0, u:0 };
+        s[sup].t++; s[sup].u += d[dk].batches[q].items.length;
+      });
+      return s;
+    };
+    const sO = sum(oldM), sN = sum(newM);
+    let diffFound = false;
+    const allSups = new Set([...Object.keys(sO), ...Object.keys(sN)]);
+    allSups.forEach(sup => { if(JSON.stringify(sO[sup]) !== JSON.stringify(sN[sup])) diffFound = true; });
+
+    if(diffFound) {
+      html += `<div style="margin-bottom:12px; border:1px solid #ddd; padding:8px; border-radius:6px;">
+                <b style="color:#0070ff;">${dk}</b>
+                <table class="diff-table">
+                  <tr><th>Supplier</th><th>Old</th><th>New</th><th>Diff</th></tr>`;
+      allSups.forEach(sup => {
+        const o = sO[sup] || {t:0, u:0}, n = sN[sup] || {t:0, u:0};
+        if(JSON.stringify(o) !== JSON.stringify(n)) {
+          const dt = n.t - o.t, du = n.u - o.u;
+          html += `<tr><td>${sup}</td><td>${o.t}T/${o.u}U</td><td>${n.t}T/${n.u}U</td>
+                   <td style="font-weight:bold; color:${du>0?'green':(du<0?'red':'black')}">${dt}T / ${du}U</td></tr>`;
+        }
+      });
+      html += `</table></div>`;
+    }
+  });
+  document.getElementById("modalBox").innerHTML = html || "No changes found between files.";
+  document.getElementById("modalBg").style.display = 'flex';
+});
+
+/* --- UTILS & GAME --- */
 async function copyModalToClipboard() {
   const btn = document.getElementById('copyBtn');
   const area = document.getElementById('captureArea');
-  btn.innerText = "⏳ Wait...";
-  try {
-    const canvas = await html2canvas(area, { scale: 2 });
-    canvas.toBlob(async (blob) => {
-      const item = new ClipboardItem({ "image/png": blob });
-      await navigator.clipboard.write([item]);
-      btn.innerText = "✅ COPIED";
-      setTimeout(() => btn.innerText = "📋 COPY IMAGE", 2000);
-    });
-  } catch (e) { alert("Error copying image."); btn.innerText = "📋 COPY IMAGE"; }
+  btn.innerText = "Processing...";
+  const canvas = await html2canvas(area, { scale: 2 });
+  canvas.toBlob(async blob => {
+    await navigator.clipboard.write([new ClipboardItem({"image/png": blob})]);
+    btn.innerText = "✅ COPIED";
+    setTimeout(() => btn.innerText = "📋 COPY IMAGE", 2000);
+  });
 }
 
-document.getElementById('download').addEventListener('click', () => { XLSX.writeFile(processedWB, "Export_MCLOGI_Final.xlsx"); });
+document.getElementById('download').addEventListener('click', () => XLSX.writeFile(processedWB, "MCLOGI_Export.xlsx"));
 
 function openGame() { document.getElementById('gameModalBg').style.display = 'flex'; }
 function spinSlot() {
