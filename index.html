@@ -506,7 +506,7 @@ const forceDateText = v => { const d=parseU(v); return (!d||isNaN(d.getTime())) 
 const makeSheetNameFromDate = dt => { return `${String(dt.getMonth()+1).padStart(2,'0')}_${String(dt.getDate()).padStart(2,'0')}_${dt.getFullYear()}`; };
 
 const getSupplier = (r) => {
-  if(!r) return 'Unknown';
+  
   let colX = (r[23] || '').toString().toUpperCase();
   if(colX.includes('asia')) return 'BIPI';
   if(colX.includes('MERIDIAN')) return 'CY8';
