@@ -507,7 +507,7 @@ const makeSheetNameFromDate = dt => { return `${String(dt.getMonth()+1).padStart
 
 const getSupplier = (r) => {
   if(!r) return 'Unknown';
-  let colX = (r[23] || '').toString().toUpperCase();
+  let colX = (r[24] || '').toString().toUpperCase();
   if(colX.includes('asia')) return 'BIPI';
   if(colX.includes('MERIDIAN')) return 'CY8';
   if(colX === 'BTG') return 'ATI';
