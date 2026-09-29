@@ -8,57 +8,372 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <style>
-  /* MAIN UI STYLING (ORIGINAL) */
-  body { font-family:'Segoe UI',sans-serif; background:#0a0b15; color:#e0e0e0; display:flex; justify-content:center; padding:18px; position:relative;}
-  .container { width:95%; max-width:1100px; background:#101126; padding:24px; border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,0.7); position:relative; }
-  h2 { text-align:center; color:#00ffd0; text-shadow:0 0 8px #00ffd0; margin-top:0; }
-  label { display:block; margin-top:8px; color:#bfefff; font-size: 13px; font-weight: bold; }
-  input[type="file"], input[type="date"] { width:100%; padding:10px; margin-top:6px; margin-bottom:6px; border-radius:8px; border:none; background:#1a1b2a; color:#e6f9ff; box-sizing: border-box; }
+  /* MODERN NEODARK CYBER UI STYLE */
+  :root {
+    --bg-main: #0b0f19;
+    --bg-card: #131a2c;
+    --bg-input: #1b243c;
+    --border-color: #263557;
+    --primary: #00ffd0;
+    --primary-glow: rgba(0, 255, 208, 0.2);
+    --secondary: #0070ff;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --accent-orange: #ff7b00;
+  }
+
+  body { 
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+    background: var(--bg-main); 
+    color: var(--text-main); 
+    display: flex; 
+    justify-content: center; 
+    padding: 24px 12px; 
+    margin: 0;
+    min-height: 100vh;
+    box-sizing: border-box;
+  }
+
+  .container { 
+    width: 100%; 
+    max-width: 1000px; 
+    background: var(--bg-card); 
+    padding: 32px; 
+    border-radius: 16px; 
+    border: 1px solid var(--border-color);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5); 
+    position: relative; 
+  }
+
+  h2 { 
+    text-align: center; 
+    color: var(--text-main); 
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-top: 0; 
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 16px;
+  }
+
+  label { 
+    display: block; 
+    margin-top: 14px; 
+    color: var(--text-muted); 
+    font-size: 13px;
+    font-weight: 600; 
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  input[type="file"], input[type="date"] { 
+    width: 100%; 
+    padding: 12px 14px; 
+    margin-top: 6px; 
+    margin-bottom: 6px; 
+    border-radius: 8px; 
+    border: 1px solid var(--border-color); 
+    background: var(--bg-input); 
+    color: var(--text-main); 
+    box-sizing: border-box; 
+    font-size: 14px;
+    transition: all 0.2s ease;
+  }
+
+  input[type="file"]:hover, input[type="date"]:hover {
+    border-color: #3b5285;
+  }
+
+  input[type="file"]:focus, input[type="date"]:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-glow);
+  }
   
-  .buttons { display:flex; gap:16px; margin-top:12px; }
-  button { flex:1; padding:12px; border-radius:12px; border:none; font-weight:600; cursor:pointer; background:linear-gradient(135deg,#00ffd0,#0070ff); color:#04121a; box-shadow:0 6px 18px rgba(0,0,0,0.6); }
-  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .buttons { display: flex; gap: 14px; margin-top: 20px; }
+  
+  button { 
+    flex: 1; 
+    padding: 14px; 
+    border-radius: 8px; 
+    border: none; 
+    font-weight: 600; 
+    font-size: 14px;
+    cursor: pointer; 
+    background: linear-gradient(135deg, var(--primary), var(--secondary)); 
+    color: #040d21; 
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0, 255, 208, 0.3);
+    filter: brightness(1.1);
+  }
+
+  button:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  button:disabled { 
+    opacity: 0.4; 
+    cursor: not-allowed; 
+    filter: grayscale(1);
+  }
+
   button.running { animation: neonGlow 1.2s infinite alternate; }
-  @keyframes neonGlow { 0%{ box-shadow:0 0 8px #00ffd0,0 0 18px #00ffd0 } 100%{ box-shadow:0 0 18px #00ffd0,0 0 36px #00ffd0 } }
+  @keyframes neonGlow { 
+    0%{ box-shadow: 0 0 8px var(--primary), 0 0 14px var(--primary-glow) }
+    100%{ box-shadow: 0 0 16px var(--primary), 0 0 28px var(--primary-glow) } 
+  }
   
   /* COMPARISON UI COMPONENTS */
-  #compareToggleBtn { background: transparent; border: 1px solid #00ffd0; color: #00ffd0; width: auto; flex: none; padding: 5px 15px; margin-bottom: 10px; font-size: 11px; }
-  .comparison-area { display: none; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; padding: 15px; background: rgba(0,255,208,0.05); border-radius: 10px; border: 1px dashed #00ffd0; }
-  #changesBtn { background: linear-gradient(135deg, #ff7b00, #ffaa00); color: white; display: none; }
+  #compareToggleBtn { 
+    background: transparent; 
+    border: 1px solid var(--primary); 
+    color: var(--primary); 
+    width: auto; 
+    flex: none; 
+    padding: 6px 16px; 
+    margin-bottom: 16px; 
+    font-size: 12px; 
+    border-radius: 6px;
+  }
+  #compareToggleBtn:hover {
+    background: var(--primary-glow);
+  }
 
-  .top-right-btns { position: absolute; top: 15px; right: 20px; display: flex; gap: 10px; }
-  .nav-btn { padding: 6px 12px; font-size: 11px; border-radius: 6px; flex: none; background: #0070ff; color: white; cursor: pointer; border: none; }
-  #scatterBtn { background: linear-gradient(135deg, #ff00ff, #7000ff); }
+  .comparison-area { 
+    display: none; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 16px; 
+    margin-bottom: 16px; 
+    padding: 16px; 
+    background: rgba(0, 255, 208, 0.02); 
+    border-radius: 8px; 
+    border: 1px dashed var(--border-color); 
+  }
 
-  .progress-container { margin-top:12px; background:#1a1b2a; border-radius:10px; overflow:hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
-  .progress-bar { height:20px; width:0%; background:linear-gradient(90deg,#00ffd0,#0070ff); text-align:center; color:#001; font-weight:700; transition:width 0.25s ease; }
+  #changesBtn { 
+    background: linear-gradient(135deg, var(--accent-orange), #ffaa00); 
+    color: white; 
+    display: none; 
+  }
+
+  .top-right-btns { 
+    position: absolute; 
+    top: 24px; 
+    right: 32px; 
+    display: flex; 
+    gap: 10px; 
+  }
+
+  .nav-btn { 
+    padding: 8px 14px; 
+    font-size: 11px; 
+    border-radius: 6px; 
+    flex: none; 
+    background: #1e294b; 
+    color: var(--text-main); 
+    cursor: pointer; 
+    border: 1px solid var(--border-color); 
+    box-shadow: none;
+  }
+  .nav-btn:hover {
+    background: #25335e;
+    box-shadow: none;
+  }
+  #scatterBtn { 
+    background: linear-gradient(135deg, #d946ef, #701a75); 
+    border: none;
+    color: white;
+  }
+  #scatterBtn:hover {
+    box-shadow: 0 4px 12px rgba(217, 70, 239, 0.3);
+  }
+
+  .progress-container { 
+    margin-top: 20px; 
+    background: var(--bg-input); 
+    border-radius: 20px; 
+    overflow: hidden; 
+    border: 1px solid var(--border-color);
+  }
   
-  #logPanel { margin-top:14px; border-radius:10px; overflow:hidden; border:1px solid #18202a; box-shadow:0 8px 30px rgba(0,0,0,0.6); }
-  #logTitle { background:#071127; color:#66f6ff; padding:8px 12px; font-weight:700; border-bottom:1px solid #0f2030; }
-  #logOutput { background:#071127; color:#dff7ff; padding:12px; font-family:Consolas, monospace; max-height:350px; overflow:auto; margin:0; display: flex; flex-direction: row; gap: 15px; flex-wrap: wrap; }
-  .log-column { flex: 1; min-width: 250px; border: 1px solid #1a2a4a; background: rgba(255, 255, 255, 0.02); padding: 8px; border-radius: 6px; }
-  .logClickable { cursor:pointer; color:#00d5ff; text-decoration:underline; display: block; margin: 4px 0; }
-
-  #modalBg, #gameModalBg { position:fixed; inset:0; background:rgba(0,0,0,0.65); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; z-index:9999; }
-  #modalBox { background:#ffffff; color:#000; padding:55px 20px 20px 20px; border-radius:10px; width:550px; max-width:95%; max-height:85vh; overflow-y:auto; position:relative; font-size:16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+  .progress-bar { 
+    height: 12px; 
+    width: 0%; 
+    background: linear-gradient(90deg, var(--primary), var(--secondary)); 
+    text-align: center; 
+    color: transparent; 
+    font-size: 0;
+    font-weight: 700; 
+    transition: width 0.25s ease; 
+  }
   
-  .vtsBtn { position:absolute; top:12px; right:12px; padding:6px 12px; font-size:11px; background:#0070ff; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight: bold; }
-  .copyBtn { position:absolute; top:12px; right:75px; padding:6px 12px; font-size:11px; background:#28a745; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight: bold; }
-  .shiftBtn { position:absolute; top:12px; left:12px; padding:6px 12px; font-size:11px; background:#6f42c1; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight: bold; }
+  #logPanel { 
+    margin-top: 24px; 
+    border-radius: 10px; 
+    overflow: hidden; 
+    border: 1px solid var(--border-color); 
+  }
+  #logTitle { 
+    background: #0d1322; 
+    color: var(--primary); 
+    padding: 12px 16px; 
+    font-weight: 700; 
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border-color); 
+  }
+  #logOutput { 
+    background: #0d1322; 
+    color: #e2e8f0; 
+    padding: 16px; 
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; 
+    font-size: 13px;
+    max-height: 350px; 
+    overflow: auto; 
+    margin: 0; 
+    display: flex; 
+    flex-direction: row; 
+    gap: 16px; 
+    flex-wrap: wrap; 
+  }
+  .log-column { 
+    flex: 1; 
+    min-width: 250px; 
+    border: 1px solid var(--border-color); 
+    background: rgba(255, 255, 255, 0.01); 
+    padding: 12px; 
+    border-radius: 6px; 
+  }
+  .log-column hr {
+    border: 0;
+    border-top: 1px solid var(--border-color);
+    margin: 8px 0;
+  }
+  .logClickable { 
+    cursor: pointer; 
+    color: var(--primary); 
+    text-decoration: none; 
+    display: block; 
+    padding: 6px 8px;
+    margin: 4px 0; 
+    border-radius: 4px;
+    background: rgba(0, 255, 208, 0.03);
+    border: 1px solid rgba(0, 255, 208, 0.1);
+    transition: all 0.15s ease;
+  }
+  .logClickable:hover {
+    background: rgba(0, 255, 208, 0.1);
+    border-color: var(--primary);
+    transform: translateX(2px);
+  }
 
-  .shift-header { background: #f4f7fa; padding: 6px 10px; border-left: 4px solid #333; margin: 12px 0 8px 0; font-weight: bold; font-size: 13px; display: flex; justify-content: space-between; }
-  .night-shift { border-left-color: #002b5c; color: #002b5c; }
-  .day-shift { border-left-color: #f39c12; color: #a36200; }
-  .buyoff-item { font-size: 13px; color: #a52a2a; margin-bottom: 2px; }
-
-  .slot-container { background: linear-gradient(145deg, #1a1a1a, #444); padding: 15px; border-radius: 15px; border: 5px solid #ff4d4d; margin: 10px auto; }
-  .slot-grid { display: grid; grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px); gap: 8px; background-color: #000; padding: 10px; border-radius: 10px; }
-  .slot-cell { background: radial-gradient(circle, #222, #000); border: 1px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 30px; border-radius: 8px; color: white; }
-  .car-label { font-size: 9px; color: #aaa; margin-top: 4px; text-transform: uppercase; }
+  /* MODALS STYLING */
+  #modalBg, #gameModalBg { 
+    position: fixed; 
+    inset: 0; 
+    background: rgba(4, 9, 21, 0.8); 
+    backdrop-filter: blur(8px); 
+    display: none; 
+    align-items: center; 
+    justify-content: center; 
+    z-index: 9999; 
+  }
   
-  .diff-table { width:100%; border-collapse: collapse; margin-top:10px; font-size:13px; }
-  .diff-table th { background:#0070ff; color:white; padding:8px; border:1px solid #ccc; }
-  .diff-table td { padding:8px; border:1px solid #ccc; text-align:center; }
+  #modalBox { 
+    background: #ffffff; 
+    color: #0f172a; 
+    padding: 60px 24px 24px 24px; 
+    border-radius: 12px; 
+    width: 550px; 
+    max-width: 95%; 
+    max-height: 85vh; 
+    overflow-y: auto; 
+    position: relative; 
+    font-size: 15px; 
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
+  }
+  
+  .vtsBtn, .copyBtn, .shiftBtn { 
+    position: absolute; 
+    top: 16px; 
+    padding: 8px 14px; 
+    font-size: 12px; 
+    border: none; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    font-weight: 600; 
+    width: auto;
+    flex: none;
+    box-shadow: none;
+    color: white;
+  }
+  .vtsBtn:hover, .copyBtn:hover, .shiftBtn:hover { transform: none; box-shadow: none; filter: brightness(0.9); }
+  
+  .vtsBtn { right: 16px; background: #0284c7; }
+  .copyBtn { right: 80px; background: #16a34a; }
+  .shiftBtn { left: 16px; background: #4f46e5; }
+
+  .shift-header { 
+    padding: 8px 12px; 
+    border-left: 4px solid #334155; 
+    margin: 16px 0 10px 0; 
+    font-weight: 700; 
+    font-size: 13px; 
+    display: flex; 
+    justify-content: space-between; 
+    border-radius: 0 6px 6px 0;
+  }
+  .night-shift { background: #f0f4f8; border-left-color: #1e3a8a; color: #1e3a8a; }
+  .day-shift { background: #fffbeb; border-left-color: #d97706; color: #d97706; }
+  .buyoff-item { font-size: 13px; color: #991b1b; margin-bottom: 4px; }
+
+  /* GAME COMPONENTS */
+  .slot-container { 
+    background: #1e1e1e; 
+    padding: 20px; 
+    border-radius: 16px; 
+    border: 4px solid #dc2626; 
+    margin: 20px auto; 
+    display: inline-block;
+  }
+  .slot-grid { 
+    display: grid; 
+    grid-template-columns: repeat(3, 90px); 
+    grid-template-rows: repeat(3, 90px); 
+    gap: 10px; 
+    background-color: #0f0f0f; 
+    padding: 12px; 
+    border-radius: 8px; 
+  }
+  .slot-cell { 
+    background: linear-gradient(145deg, #262626, #171717); 
+    border: 1px solid #404040; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 28px; 
+    border-radius: 8px; 
+    color: white; 
+  }
+  .car-label { 
+    font-size: 10px; 
+    color: #a3a3a3; 
+    margin-top: 4px; 
+    text-transform: uppercase; 
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  
+  .diff-table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 13px; }
+  .diff-table th { background: #0284c7; color: white; padding: 10px; border: 1px solid #e2e8f0; }
+  .diff-table td { padding: 10px; border: 1px solid #e2e8f0; text-align: center; }
 </style>
 </head>
 <body>
@@ -68,9 +383,9 @@
     <button id="scatterBtn" class="nav-btn" onclick="openGame()">🎰 SCATTER</button>
     <button class="nav-btn" onclick="window.open('https://pauloisip123.github.io/buyoff/', '_blank')">FOR BUYOFF</button>
   </div>
-  <h2>🚀 Export Per Date — MCLOGI</h2>
+  <h2>Export Per Date — MCLOGI</h2>
   
-  <button id="compareToggleBtn" onclick="toggleComparison()">➕ SHOW COMPARISON</button>
+  <button id="compareToggleBtn" onclick="toggleComparison()">SHOW COMPARISON</button>
 
   <div id="standardInput">
     <label>Upload Excel File(s)</label>
@@ -79,7 +394,7 @@
 
   <div id="comparisonArea" class="comparison-area">
     <div>
-      <label style="color:#00ffd0;">[NEW] Left Upload (Latest)</label>
+      <label style="color:var(--primary);">[NEW] Left Upload (Latest)</label>
       <input id="fileNew" type="file" accept=".xls,.xlsx">
     </div>
     <div>
@@ -88,15 +403,15 @@
     </div>
   </div>
 
-  <div style="display:flex;gap:12px;margin-top:8px;">
+  <div style="display:flex; gap:16px; margin-top:8px;">
     <div style="flex:1"><label>Start Date</label><input id="start" type="date"></div>
     <div style="flex:1"><label>End Date</label><input id="end" type="date"></div>
   </div>
 
   <div class="buttons">
-    <button id="run">Run</button>
-    <button id="download" disabled>Download</button>
-    <button id="changesBtn">Changes</button>
+    <button id="run">Run Process</button>
+    <button id="download" disabled>Download Report</button>
+    <button id="changesBtn">View Changes</button>
   </div>
 
   <div class="progress-container"><div id="progress-bar" class="progress-bar">0%</div></div>
@@ -111,22 +426,22 @@
 
 <div id="gameModalBg" onclick="if(event.target==this)this.style.display='none'">
   <div style="text-align:center;">
-    <h1 style="color:#ff4d4d; text-shadow: 0 0 10px #000;">🚗 MITSUBISHI SPIN 🚗</h1>
+    <h1 style="color:#ff4d4d; text-shadow: 0 4px 10px rgba(0,0,0,0.5); font-size: 28px; margin-bottom: 5px;">MITSUBISHI SPIN</h1>
     <div class="slot-container">
         <div class="slot-grid" id="slot-grid">
-            <div class="slot-cell">🚗<div class="car-label">Mirage</div></div>
-            <div class="slot-cell">🚐<div class="car-label">Xpander</div></div>
-            <div class="slot-cell">🚘<div class="car-label">Montero</div></div>
-            <div class="slot-cell">✨<div class="car-label">WILD</div></div>
-            <div class="slot-cell">🚗<div class="car-label">Mirage</div></div>
-            <div class="slot-cell">🚐<div class="car-label">Xpander</div></div>
-            <div class="slot-cell">🚘<div class="car-label">Montero</div></div>
-            <div class="slot-cell">✨<div class="car-label">WILD</div></div>
-            <div class="slot-cell">🚗<div class="car-label">Mirage</div></div>
+            <div class="slot-cell"><div class="car-label">Mirage</div></div>
+            <div class="slot-cell"><div class="car-label">Xpander</div></div>
+            <div class="slot-cell"><div class="car-label">Montero</div></div>
+            <div class="slot-cell"><div class="car-label">WILD</div></div>
+            <div class="slot-cell"><div class="car-label">Mirage</div></div>
+            <div class="slot-cell"><div class="car-label">Xpander</div></div>
+            <div class="slot-cell"><div class="car-label">Montero</div></div>
+            <div class="slot-cell"><div class="car-label">WILD</div></div>
+            <div class="slot-cell"><div class="car-label">Mirage</div></div>
         </div>
     </div>
-    <button onclick="spinSlot()" style="margin-top:20px; padding:12px 30px; background:#ff4d4d; color:white; font-weight:bold; border-radius:8px; cursor:pointer; font-size:18px; border:none; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">DRIVE SPIN</button>
-    <div id="gameMsg" style="margin-top:15px; font-size:20px; color:white; font-weight: bold; text-shadow: 1px 1px 3px #000;">🏁 Ready to Roll 🏁</div>
+    <button onclick="spinSlot()" style="margin-top:10px; padding:14px 36px; background:#dc2626; color:white; font-weight:bold; border-radius:8px; cursor:pointer; font-size:16px; border:none; box-shadow: 0 4px 12px rgba(0,0,0,0.4); width: auto;">DRIVE SPIN</button>
+    <div id="gameMsg" style="margin-top:16px; font-size:18px; color:white; font-weight: bold; text-shadow: 1px 1px 3px #000;">Ready to Roll</div>
   </div>
 </div>
 
@@ -150,12 +465,12 @@ function toggleComparison() {
     area.style.display = 'grid';
     std.style.display = 'none';
     chg.style.display = 'block';
-    btn.innerText = '➖ HIDE COMPARISON';
+    btn.innerText = ' HIDE COMPARISON';
   } else {
     area.style.display = 'none';
     std.style.display = 'block';
     chg.style.display = 'none';
-    btn.innerText = '➕ SHOW COMPARISON';
+    btn.innerText = ' SHOW COMPARISON';
   }
 }
 
@@ -181,10 +496,10 @@ const formatTextDate = dt => {
   const yyyy=dt.getFullYear();
   const hh=String(dt.getHours()).padStart(2,'0');
   const mi=String(dt.getMinutes()).padStart(2,'0');
-  return ${mm}/${dd}/${yyyy} ${hh}:${mi};
+  return `${mm}/${dd}/${yyyy} ${hh}:${mi}`;
 };
 const forceDateText = v => { const d=parseU(v); return (!d||isNaN(d)) ? (v??'') : formatTextDate(d); };
-const makeSheetNameFromDate = dt => { return ${String(dt.getMonth()+1).padStart(2,'0')}_${String(dt.getDate()).padStart(2,'0')}_${dt.getFullYear()}; };
+const makeSheetNameFromDate = dt => { return `${String(dt.getMonth()+1).padStart(2,'0')}_${String(dt.getDate()).padStart(2,'0')}_${dt.getFullYear()}`; };
 
 const getSupplier = (r) => {
   let colX = (r[23] || '').toString().toUpperCase();
@@ -223,9 +538,9 @@ document.getElementById('run').addEventListener('click', async () => {
 
   for (let f = 0; f < files.length; f++) {
     const fileObj = files[f];
-    const colId = col-${f};
-    const fileLabel = fileObj.type === 'STD' ? fileObj.file.name : [${fileObj.type}] ${fileObj.file.name};
-    logEl.innerHTML += <div class="log-column" id="${colId}"><b style="color:#00ffd0;">${fileLabel}</b><hr></div>;
+    const colId = `col-${f}`;
+    const fileLabel = fileObj.type === 'STD' ? fileObj.file.name : `[${fileObj.type}] ${fileObj.file.name}`;
+    logEl.innerHTML += `<div class="log-column" id="${colId}"><b style="color:var(--primary);">${fileLabel}</b><hr></div>`;
     const currentCol = document.getElementById(colId);
 
     try {
@@ -287,18 +602,18 @@ document.getElementById('run').addEventListener('click', async () => {
           });
         });
 
-        const sn = dk + (files.length > 1 ?  (${f}) : "");
+        const sn = dk + (files.length > 1 ?  (`(${f})`) : "");
         XLSX.utils.book_append_sheet(processedWB, XLSX.utils.aoa_to_sheet(allRows), sn.substring(0,31));
         storedData[sn] = { batches: entry.batches, realDate: entry.realDate, sortedKeys, allRows };
         
-        currentCol.innerHTML += <span class="logClickable" onclick="showDetails('${sn}')">${dk} = ${sortedKeys.length} / ${unitCount}</span>;
+        currentCol.innerHTML += `<span class="logClickable" onclick="showDetails('${sn}')">${dk} = ${sortedKeys.length} / ${unitCount}</span>`;
       });
     } catch(e) { 
-      currentCol.innerHTML += <div style="color:red;">Error: ${e.message}</div>; 
+      currentCol.innerHTML += `<div style="color:red;">Error: ${e.message}</div>`; 
     }
     document.getElementById('progress-bar').style.width = Math.floor(((f+1)/files.length)*100)+'%';
   }
-  btnRun.disabled = false; btnRun.classList.remove('running'); btnRun.textContent = 'Run';
+  btnRun.disabled = false; btnRun.classList.remove('running'); btnRun.textContent = 'Run Process';
   document.getElementById('download').disabled = false;
 });
 
@@ -324,17 +639,17 @@ function showDetails(sn){
     merged[key].u += groups[q].count; merged[key].t++;
   });
 
-  let html = <button class="shiftBtn" onclick="showShiftDetails('${sn}')">SHIFT DETAILS</button>;
-  html += <button class="vtsBtn" onclick="window.open('https://pauloisip123.github.io/buyoff/','_blank')">VTS</button>;
-  html += <button id="copyBtn" class="copyBtn" onclick="copyModalToClipboard()">📋 COPY IMAGE</button>;
-  html += <div id="captureArea" style="padding:20px; background:white; color:black; border-radius:4px; font-family: 'Segoe UI', Arial, sans-serif;">;
-  html += <div style="border-left: 5px solid #0070ff; padding-left: 10px;"><b style="font-size:18px;">${sn}</b></div><hr>;
+  let html = `<button class="shiftBtn" onclick="showShiftDetails('${sn}')">SHIFT DETAILS</button>`;
+  html += `<button class="vtsBtn" onclick="window.open('https://pauloisip123.github.io/buyoff/','_blank')">VTS</button>`;
+  html += `<button id="copyBtn" class="copyBtn" onclick="copyModalToClipboard()">📋 COPY IMAGE</button>`;
+  html += `<div id="captureArea" style="padding:20px; background:white; color:black; border-radius:4px; font-family: 'Segoe UI', Arial, sans-serif;">`;
+  html += `<div style="border-left: 5px solid #0070ff; padding-left: 10px;"><b style="font-size:18px;">${sn}</b></div><hr style="border:0; border-top:1px solid #e2e8f0; margin:12px 0;">`;
   Object.keys(merged).sort().forEach(k => { 
-    html += <div><b>${k}</b> = ${merged[k].t} trips / ${merged[k].u} units</div>; 
+    html += `<div style="margin-bottom:6px;"><b>${k}</b> = ${merged[k].t} trips / ${merged[k].u} units</div>`; 
   });
-  html += <br><div style="background:#fff5f5; padding:10px; border:1px solid #ffdada;"><b>BUYOFF SUMMARY</b><br>;
-  Object.keys(exportCounts).forEach(k => html += <div>${k}: <b>${exportCounts[k]}</b></div>);
-  html += </div></div>;
+  html += `<br><div style="background:#fff5f5; padding:12px; border:1px solid #ffdada; border-radius:6px;"><b>BUYOFF SUMMARY</b><div style="margin-top:6px;">`;
+  Object.keys(exportCounts).forEach(k => html += `<div class="buyoff-item">${k}: <b>${exportCounts[k]}</b></div>`);
+  html += `</div></div></div>`;
 
   document.getElementById("modalBox").innerHTML = html;
   document.getElementById("modalBg").style.display = 'flex';
@@ -365,17 +680,19 @@ function showShiftDetails(sn) {
       if(!m[k]) m[k] = { u: 0, t: 0 }; m[k].u += s[q].count; m[k].t++;
     });
     let h = "";
-    Object.keys(m).sort().forEach(k => { h += <div><b>${k}</b> = ${m[k].t} / ${m[k].u}</div>; });
-    return h || "No data";
+    Object.keys(m).sort().forEach(k => { h += `<div style="margin-bottom:4px;"><b>${k}</b> = ${m[k].t} / ${m[k].u}</div>`; });
+    return h || '<div style="color:#94a3b8; font-style:italic;">No data</div>';
   };
 
   document.getElementById("modalBox").innerHTML = `
-    <button class="shiftBtn" style="background:#444" onclick="showDetails('${sn}')">⬅️ BACK</button>
+    <button class="shiftBtn" style="background:#475569" onclick="showDetails('${sn}')"> BACK</button>
     <button id="copyBtn" class="copyBtn" onclick="copyModalToClipboard()">📋 COPY IMAGE</button>
-    <div id="captureArea" style="padding:20px; background:white; color:black;">
-      <div style="text-align:center; font-weight:bold;">${sn}</div><hr>
-      <div class="shift-header night-shift"><span>🌙 NIGHT SHIFT</span> <small>6PM-6AM</small></div>${render(night)}
-      <div class="shift-header day-shift"><span>☀️ DAY SHIFT</span> <small>6AM-7PM</small></div>${render(day)}
+    <div id="captureArea" style="padding:20px; background:white; color:black; font-family: 'Segoe UI', Arial, sans-serif;">
+      <div style="text-align:center; font-weight:bold; font-size:16px;">${sn}</div><hr style="border:0; border-top:1px solid #e2e8f0; margin:12px 0;">
+      <div class="shift-header night-shift"><span>🌙 NIGHT SHIFT</span> <small>6PM-6AM</small></div>
+      <div style="padding-left:8px;">${render(night)}</div>
+      <div class="shift-header day-shift"><span>☀️ DAY SHIFT</span> <small>6AM-7PM</small></div>
+      <div style="padding-left:8px;">${render(day)}</div>
     </div>`;
 }
 
@@ -385,7 +702,7 @@ document.getElementById('changesBtn').addEventListener('click', () => {
   if(!oldM || !newM) return alert("Run both NEW and OLD files first.");
 
   const allDates = Array.from(new Set([...Object.keys(oldM), ...Object.keys(newM)])).sort();
-  let html = <h3>Changes Comparison Report</h3><hr>;
+  let html = `<h3 style="margin-top:0; font-size:18px;">Changes Comparison Report</h3><hr style="border:0; border-top:1px solid #e2e8f0; margin:12px 0;">`;
 
   allDates.forEach(dk => {
     const sum = (d) => {
@@ -404,22 +721,26 @@ document.getElementById('changesBtn').addEventListener('click', () => {
     allSups.forEach(sup => { if(JSON.stringify(sO[sup]) !== JSON.stringify(sN[sup])) diffFound = true; });
 
     if(diffFound) {
-      html += `<div style="margin-bottom:12px; border:1px solid #ddd; padding:8px; border-radius:6px;">
-                <b style="color:#0070ff;">${dk}</b>
+      html += `<div style="margin-bottom:16px; border:1px solid #e2e8f0; padding:12px; border-radius:8px; background:#f8fafc;">
+                <b style="color:#0284c7; font-size:14px;">${dk}</b>
                 <table class="diff-table">
                   <tr><th>Supplier</th><th>Old</th><th>New</th><th>Diff</th></tr>`;
       allSups.forEach(sup => {
         const o = sO[sup] || {t:0, u:0}, n = sN[sup] || {t:0, u:0};
         if(JSON.stringify(o) !== JSON.stringify(n)) {
           const dt = n.t - o.t, du = n.u - o.u;
-          html += `<tr><td>${sup}</td><td>${o.t}T/${o.u}U</td><td>${n.t}T/${n.u}U</td>
-                   <td style="font-weight:bold; color:${du>0?'green':(du<0?'red':'black')}">${dt}T / ${du}U</td></tr>`;
+          html += `<tr>
+                    <td><b>${sup}</b></td>
+                    <td>${o.t}T / ${o.u}U</td>
+                    <td>${n.t}T / ${n.u}U</td>
+                    <td style="font-weight:bold; color:${du>0?'#16a34a':(du<0?'#dc2626':'#0f172a')}">${dt}T / ${du}U</td>
+                   </tr>`;
         }
       });
-      html += </table></div>;
+      html += `</table></div>`;
     }
   });
-  document.getElementById("modalBox").innerHTML = html || "No changes found between files.";
+  document.getElementById("modalBox").innerHTML = html || '<div style="text-align:center; padding:20px; color:#64748b;">No changes found between files.</div>';
   document.getElementById("modalBg").style.display = 'flex';
 });
 
@@ -431,7 +752,7 @@ async function copyModalToClipboard() {
   const canvas = await html2canvas(area, { scale: 2 });
   canvas.toBlob(async blob => {
     await navigator.clipboard.write([new ClipboardItem({"image/png": blob})]);
-    btn.innerText = "✅ COPIED";
+    btn.innerText = "👍 COPIED";
     setTimeout(() => btn.innerText = "📋 COPY IMAGE", 2000);
   });
 }
@@ -443,17 +764,17 @@ function spinSlot() {
     const cells = document.querySelectorAll('.slot-cell');
     const msg = document.getElementById('gameMsg');
     let count = 0;
-    const cars = [{icon:'🚗',name:'Mirage'},{icon:'🚐',name:'Xpander'},{icon:'🚘',name:'Montero'},{icon:'✨',name:'WILD'}];
+    const cars = [{icon:'',name:'Mirage'},{icon:'',name:'Xpander'},{icon:'',name:'Montero'},{icon:'',name:'WILD'}];
     msg.innerText = "Spinning...";
     const inv = setInterval(() => {
         cells.forEach(c => {
             const p = cars[Math.floor(Math.random()*cars.length)];
-            c.innerHTML = ${p.icon}<div class="car-label">${p.name}</div>;
+            c.innerHTML = `${p.icon}<div class="car-label">${p.name}</div>`;
         });
         if(++count > 15){
             clearInterval(inv);
             const res = Array.from(cells).map(c => c.innerText.split('\n')[0]);
-            msg.innerText = (res[3]==res[4] && res[4]==res[5]) ? "JACKPOT! 🏁" : "Try Again!";
+            msg.innerText = (res[3]==res[4] && res[4]==res[5]) ? "🎉 JACKPOT! 🎉" : "Try Again!";
         }
     }, 70);
 }
