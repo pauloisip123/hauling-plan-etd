@@ -90,9 +90,9 @@
     border-color: var(--primary);
     box-shadow: 0 0 0 3px var(--primary-glow);
   }
-  
+
   .buttons { display: flex; gap: 14px; margin-top: 20px; }
-  
+
   button { 
     flex: 1; 
     padding: 14px; 
@@ -128,7 +128,7 @@
     0%{ box-shadow: 0 0 8px var(--primary), 0 0 14px var(--primary-glow) }
     100%{ box-shadow: 0 0 16px var(--primary), 0 0 28px var(--primary-glow) } 
   }
-  
+
   /* COMPARISON UI COMPONENTS */
   #compareToggleBtn { 
     background: transparent; 
@@ -201,7 +201,7 @@
     overflow: hidden; 
     border: 1px solid var(--border-color);
   }
-  
+
   .progress-bar { 
     height: 12px; 
     width: 0%; 
@@ -212,7 +212,7 @@
     font-weight: 700; 
     transition: width 0.25s ease; 
   }
-  
+
   #logPanel { 
     margin-top: 24px; 
     border-radius: 10px; 
@@ -284,7 +284,7 @@
     justify-content: center; 
     z-index: 9999; 
   }
-  
+
   #modalBox { 
     background: #ffffff; 
     color: #0f172a; 
@@ -298,7 +298,7 @@
     font-size: 15px; 
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
   }
-  
+
   .vtsBtn, .copyBtn, .shiftBtn { 
     position: absolute; 
     top: 16px; 
@@ -314,7 +314,7 @@
     color: white;
   }
   .vtsBtn:hover, .copyBtn:hover, .shiftBtn:hover { transform: none; box-shadow: none; filter: brightness(0.9); }
-  
+
   .vtsBtn { right: 16px; background: #0284c7; }
   .copyBtn { right: 80px; background: #16a34a; }
   .shiftBtn { left: 16px; background: #4f46e5; }
@@ -370,7 +370,7 @@
     font-weight: 600;
     letter-spacing: 0.5px;
   }
-  
+
   .diff-table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 13px; }
   .diff-table th { background: #0284c7; color: white; padding: 10px; border: 1px solid #e2e8f0; }
   .diff-table td { padding: 10px; border: 1px solid #e2e8f0; text-align: center; }
@@ -384,7 +384,7 @@
     <button class="nav-btn" onclick="window.open('https://pauloisip123.github.io/buyoff/', '_blank')">FOR BUYOFF</button>
   </div>
   <h2>Export Per Date — MCLOGI</h2>
-  
+
   <button id="compareToggleBtn" onclick="toggleComparison()">SHOW COMPARISON</button>
 
   <div id="standardInput">
@@ -446,7 +446,9 @@
 </div>
 
 <script type="text/javascript">
-(function() { emailjs.init("FLCbs2vgZOv04Bk88"); })();
+if(typeof emailjs !== 'undefined') {
+  emailjs.init("FLCbs2vgZOv04Bk88");
+}
 
 /* --- GLOBAL STATE --- */
 let isCompareMode = false;
@@ -485,12 +487,13 @@ const parseU = v => {
     if(m) return new Date(m[3],m[1]-1,m[2],m[4],m[5]);
     m=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
     if(m) return new Date(m[3],m[1]-1,m[2]);
-    const d=new Date(s); if(!isNaN(d)) return d;
+    const d=new Date(s); if(!isNaN(d.getTime())) return d;
   }
   return null;
 };
+
 const formatTextDate = dt => {
-  if(!dt||isNaN(dt)) return '';
+  if(!dt||isNaN(dt.getTime())) return '';
   const mm=String(dt.getMonth()+1).padStart(2,'0');
   const dd=String(dt.getDate()).padStart(2,'0');
   const yyyy=dt.getFullYear();
@@ -498,12 +501,14 @@ const formatTextDate = dt => {
   const mi=String(dt.getMinutes()).padStart(2,'0');
   return `${mm}/${dd}/${yyyy} ${hh}:${mi}`;
 };
-const forceDateText = v => { const d=parseU(v); return (!d||isNaN(d)) ? (v??'') : formatTextDate(d); };
+
+const forceDateText = v => { const d=parseU(v); return (!d||isNaN(d.getTime())) ? (v??'') : formatTextDate(d); };
 const makeSheetNameFromDate = dt => { return `${String(dt.getMonth()+1).padStart(2,'0')}_${String(dt.getDate()).padStart(2,'0')}_${dt.getFullYear()}`; };
 
 const getSupplier = (r) => {
+  if(!r) return 'Unknown';
   let colX = (r[23] || '').toString().toUpperCase();
-  if(colX.includes('Pearl Asia')) return 'BIPI';
+  if(colX.includes('PEARL ASIA')) return 'BIPI';
   if(colX.includes('MERIDIAN')) return 'CY8';
   if(colX === 'BTG') return 'ATI';
   if(colX === 'MNL') return '2GO MANILA';
@@ -565,13 +570,13 @@ document.getElementById('run').addEventListener('click', async () => {
 
       Object.keys(batchGroups).forEach(q => {
         const items = batchGroups[q];
-        const parsed = items.map(i=>({...i, dt:parseU(i.rawU)})).filter(p=>p.dt && !isNaN(p.dt));
+        const parsed = items.map(i=>({...i, dt:parseU(i.rawU)})).filter(p=>p.dt && !isNaN(p.dt.getTime()));
         if(!parsed.length) return;
 
         let minDate = new Date(Math.min(...parsed.map(p=>p.dt.getTime())));
-        let sheetRef = new Date(minDate);
+        let sheetRef = new Date(minDate.getTime());
         
-        // --- 7:00 PM CUTOFF LOGIC (CONSISTENT FOR ALL MODES) ---
+        // --- 7:00 PM CUTOFF LOGIC ---
         if(sheetRef.getHours() < 19) sheetRef.setDate(sheetRef.getDate()-1);
         sheetRef.setHours(0,0,0,0);
         
@@ -602,7 +607,7 @@ document.getElementById('run').addEventListener('click', async () => {
           });
         });
 
-        const sn = dk + (files.length > 1 ?  (`(${f})`) : "");
+        const sn = dk + (files.length > 1 ? (`(${f})`) : "");
         XLSX.utils.book_append_sheet(processedWB, XLSX.utils.aoa_to_sheet(allRows), sn.substring(0,31));
         storedData[sn] = { batches: entry.batches, realDate: entry.realDate, sortedKeys, allRows };
         
@@ -620,7 +625,7 @@ document.getElementById('run').addEventListener('click', async () => {
 /* --- MODAL DISPLAY --- */
 function showDetails(sn){
   const info = storedData[sn];
-  const bodyRows = info.allRows.slice(5);
+  const bodyRows = info.allRows.slice(4);
   let groups = {}, exportCounts = {};
   
   bodyRows.forEach(r => {
@@ -749,12 +754,17 @@ async function copyModalToClipboard() {
   const btn = document.getElementById('copyBtn');
   const area = document.getElementById('captureArea');
   btn.innerText = "Processing...";
-  const canvas = await html2canvas(area, { scale: 2 });
-  canvas.toBlob(async blob => {
-    await navigator.clipboard.write([new ClipboardItem({"image/png": blob})]);
-    btn.innerText = "👍 COPIED";
+  try {
+    const canvas = await html2canvas(area, { scale: 2 });
+    canvas.toBlob(async blob => {
+      await navigator.clipboard.write([new ClipboardItem({"image/png": blob})]);
+      btn.innerText = "👍 COPIED";
+      setTimeout(() => btn.innerText = "📋 COPY IMAGE", 2000);
+    });
+  } catch(err) {
+    btn.innerText = "❌ ERROR";
     setTimeout(() => btn.innerText = "📋 COPY IMAGE", 2000);
-  });
+  }
 }
 
 document.getElementById('download').addEventListener('click', () => XLSX.writeFile(processedWB, "MCLOGI_Export.xlsx"));
@@ -764,7 +774,7 @@ function spinSlot() {
     const cells = document.querySelectorAll('.slot-cell');
     const msg = document.getElementById('gameMsg');
     let count = 0;
-    const cars = [{icon:'',name:'Mirage'},{icon:'',name:'Xpander'},{icon:'',name:'Montero'},{icon:'',name:'WILD'}];
+    const cars = [{icon:'🚗',name:'Mirage'},{icon:'🚙',name:'Xpander'},{icon:'🚘',name:'Montero'},{icon:'⭐',name:'WILD'}];
     msg.innerText = "Spinning...";
     const inv = setInterval(() => {
         cells.forEach(c => {
