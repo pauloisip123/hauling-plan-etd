@@ -506,12 +506,14 @@ const forceDateText = v => { const d=parseU(v); return (!d||isNaN(d.getTime())) 
 const makeSheetNameFromDate = dt => { return `${String(dt.getMonth()+1).padStart(2,'0')}_${String(dt.getDate()).padStart(2,'0')}_${dt.getFullYear()}`; };
 
 const getSupplier = (r) => {
-  
-  let colX = (r[23] || '').toString().toUpperCase();
-  if(colX.includes('Asia')) return 'BIPI';
-  if(colX.includes('MERIDIAN')) return 'CY8';
-  if(colX === 'BTG') return 'ATI';
-  if(colX === 'MNL') return '2GO MANILA';
+  if(!r) return 'Unknown';
+  let colX = (r[23] || '').toString().toUpperCase(); // Column X (r[23])
+  let colY = (r[24] || '').toString().toUpperCase(); // Column Y (r[24])
+
+  if(colX.includes('ASIA')) return 'BIPI';
+  if(colY.includes('MERIDIAN')) return 'CY8';
+  if(colY === 'BTG') return 'ATI';
+  if(colY === 'MNL') return '2GO MANILA';
   return (r[24] || r[3] || 'Unknown');
 };
 
