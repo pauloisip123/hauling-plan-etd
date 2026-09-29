@@ -188,7 +188,7 @@ const makeSheetNameFromDate = dt => { return ${String(dt.getMonth()+1).padStart(
 
 const getSupplier = (r) => {
   let colX = (r[23] || '').toString().toUpperCase();
-  if(colX.includes('BIPI')) return 'BIPI';
+  if(colX.includes('Pearl Asia')) return 'BIPI';
   if(colX.includes('MERIDIAN')) return 'CY8';
   if(colX === 'BTG') return 'ATI';
   if(colX === 'MNL') return '2GO MANILA';
