@@ -274,10 +274,10 @@
   }
 
   /* MODALS STYLING */
-  #modalBg, #gameModalBg { 
+  #modalBg, #gameModalBg, #subModalBg { 
     position: fixed; 
     inset: 0; 
-    background: rgba(4, 9, 21, 0.8); 
+    background: rgba(4, 9, 21, 0.85); 
     backdrop-filter: blur(8px); 
     display: none; 
     align-items: center; 
@@ -285,7 +285,7 @@
     z-index: 9999; 
   }
 
-  #modalBox { 
+  #modalBox, #subModalBox { 
     background: #ffffff; 
     color: #0f172a; 
     padding: 60px 24px 24px 24px; 
@@ -297,6 +297,14 @@
     position: relative; 
     font-size: 15px; 
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
+  }
+
+  #subModalBox {
+    background: var(--bg-card);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 24px;
+    width: 650px;
   }
 
   .vtsBtn, .copyBtn, .shiftBtn { 
@@ -331,7 +339,64 @@
   }
   .night-shift { background: #f0f4f8; border-left-color: #1e3a8a; color: #1e3a8a; }
   .day-shift { background: #fffbeb; border-left-color: #d97706; color: #d97706; }
-  .buyoff-item { font-size: 13px; color: #991b1b; margin-bottom: 4px; }
+  
+  .buyoff-item { 
+    font-size: 13px; 
+    color: #991b1b; 
+    margin-bottom: 4px; 
+    cursor: pointer; 
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+  .buyoff-item:hover {
+    background: #ffe4e4;
+    color: #7f1d1d;
+  }
+
+  /* CLICKABLE LINE ITEMS IN MAIN MODAL */
+  .summary-line {
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: background 0.15s;
+    margin-bottom: 4px;
+  }
+  .summary-line:hover {
+    background-color: #f1f5f9;
+    color: #0284c7;
+  }
+
+  /* CYBER BREAKDOWN BATCH CARD IN SUB MODAL */
+  .batch-card {
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 12px;
+  }
+  .batch-header {
+    font-weight: bold;
+    color: var(--primary);
+    font-size: 13px;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border-color);
+  }
+  table.detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  table.detail-table th, table.detail-table td {
+    border: 1px solid var(--border-color);
+    padding: 8px 10px;
+    text-align: left;
+  }
+  table.detail-table th {
+    background-color: #0d1322;
+    color: var(--text-muted);
+  }
 
   /* GAME COMPONENTS */
   .slot-container { 
@@ -422,8 +487,30 @@
   </div>
 </div>
 
+<!-- MAIN MODAL VIEW -->
 <div id="modalBg" onclick="if(event.target==this)this.style.display='none'"><div id="modalBox"></div></div>
 
+<!-- SUB-MODAL VIEW FOR BREAKDOWN DETAILS -->
+<div id="subModalBg" onclick="if(event.target==this)this.style.display='none'">
+  <div id="subModalBox">
+    <button onclick="document.getElementById('subModalBg').style.display='none'" style="position:absolute; top:16px; right:16px; background:#ef4444; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:bold; width:auto;">Close</button>
+    
+    <!-- Title and Model Summary Header Container -->
+    <div style="display: flex; align-items: center; justify-content: space-between; padding-right: 70px; gap: 12px; flex-wrap: wrap;">
+      <div>
+        <h3 id="subModalTitle" style="margin:0; color:var(--primary); font-size:18px;">Breakdown Details</h3>
+        <p id="subModalSubtitle" style="font-size: 13px; color: var(--text-muted); margin: 4px 0 0 0;"></p>
+      </div>
+      
+      <!-- Container para sa Model Description Summary Badges -->
+      <div id="subModalHeaderSummary" style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; max-width: 350px;"></div>
+    </div>
+
+    <div id="subModalBody" style="margin-top: 12px;"></div>
+  </div>
+</div>
+
+<!-- GAME MODAL -->
 <div id="gameModalBg" onclick="if(event.target==this)this.style.display='none'">
   <div style="text-align:center;">
     <h1 style="color:#ff4d4d; text-shadow: 0 4px 10px rgba(0,0,0,0.5); font-size: 28px; margin-bottom: 5px;">MITSUBISHI SPIN</h1>
@@ -651,11 +738,15 @@ function showDetails(sn){
   html += `<button id="copyBtn" class="copyBtn" onclick="copyModalToClipboard()">📋 COPY IMAGE</button>`;
   html += `<div id="captureArea" style="padding:20px; background:white; color:black; border-radius:4px; font-family: 'Segoe UI', Arial, sans-serif;">`;
   html += `<div style="border-left: 5px solid #0070ff; padding-left: 10px;"><b style="font-size:18px;">${sn}</b></div><hr style="border:0; border-top:1px solid #e2e8f0; margin:12px 0;">`;
+  
   Object.keys(merged).sort().forEach(k => { 
-    html += `<div style="margin-bottom:6px;"><b>${k}</b> = ${merged[k].t} trips / ${merged[k].u} units</div>`; 
+    html += `<div class="summary-line" onclick="showBatchBreakdown('${sn}', '${k.replace(/'/g, "\\'")}')"><b>${k}</b> = ${merged[k].t} trips / ${merged[k].u} units</div>`; 
   });
+  
   html += `<br><div style="background:#fff5f5; padding:12px; border:1px solid #ffdada; border-radius:6px;"><b>BUYOFF SUMMARY</b><div style="margin-top:6px;">`;
-  Object.keys(exportCounts).forEach(k => html += `<div class="buyoff-item">${k}: <b>${exportCounts[k]}</b></div>`);
+  Object.keys(exportCounts).forEach(k => {
+    html += `<div class="buyoff-item" onclick="showBuyoffBreakdown('${sn}', '${k.replace(/'/g, "\\'")}')">${k}: <b>${exportCounts[k]}</b></div>`;
+  });
   html += `</div></div></div>`;
 
   document.getElementById("modalBox").innerHTML = html;
@@ -667,7 +758,7 @@ function showShiftDetails(sn) {
   const nightStart = new Date(realDate); nightStart.setHours(18, 0, 0);
   const dayStart = new Date(realDate); dayStart.setDate(dayStart.getDate() + 1); dayStart.setHours(6, 0, 0);
 
-  let night = {}, day = {}, buyoff = {};
+  let night = {}, day = {};
   sortedKeys.forEach(q => {
     const b = batches[q];
     const isNight = (b.minDate >= nightStart && b.minDate < dayStart);
@@ -676,7 +767,6 @@ function showShiftDetails(sn) {
       let sup = getSupplier(e.row);
       if(!target[q]) target[q] = { sups: new Set(), count: 0 };
       target[q].sups.add(sup); target[q].count++;
-      if(e.row[6]) buyoff[e.row[6]] = (buyoff[e.row[6]]||0)+1;
     });
   });
 
@@ -687,7 +777,9 @@ function showShiftDetails(sn) {
       if(!m[k]) m[k] = { u: 0, t: 0 }; m[k].u += s[q].count; m[k].t++;
     });
     let h = "";
-    Object.keys(m).sort().forEach(k => { h += `<div style="margin-bottom:4px;"><b>${k}</b> = ${m[k].t} / ${m[k].u}</div>`; });
+    Object.keys(m).sort().forEach(k => { 
+      h += `<div class="summary-line" onclick="showBatchBreakdown('${sn}', '${k.replace(/'/g, "\\'")}')"><b>${k}</b> = ${m[k].t} / ${m[k].u}</div>`; 
+    });
     return h || '<div style="color:#94a3b8; font-style:italic;">No data</div>';
   };
 
@@ -701,6 +793,240 @@ function showShiftDetails(sn) {
       <div class="shift-header day-shift"><span>☀️ DAY SHIFT</span> <small>6AM-7PM</small></div>
       <div style="padding-left:8px;">${render(day)}</div>
     </div>`;
+}
+
+/* --- FIXED BATCH BREAKDOWN SUB-MODAL LOGIC (EXACT TRIP MATCHING) --- */
+function showBatchBreakdown(sn, supplierQuery) {
+  const info = storedData[sn];
+  if(!info) return;
+
+  const bodyRows = info.allRows.slice(4);
+  
+  // 1. Unang alamin kung aling BATCH KEYS lang ang eksaktong tumutugma sa supplierQuery
+  let matchingBatchKeys = new Set();
+  
+  // I-group muna bawat batch key para malaman ang buong Supplier string nito
+  let tempBatchMap = {};
+  let currentBatch = "";
+
+  bodyRows.forEach(row => {
+    if(!row || row.length === 0) return;
+    const colA = String(row[0] || '').trim();
+
+    if(colA.startsWith('BATCH:')) {
+      currentBatch = colA.replace('BATCH:', '').trim();
+      if(!tempBatchMap[currentBatch]) tempBatchMap[currentBatch] = new Set();
+      return;
+    }
+
+    if(currentBatch) {
+      const sup = getSupplier(row);
+      tempBatchMap[currentBatch].add(sup);
+    }
+  });
+
+  // Hanapin ang batch keys kung saan ang pinagsama-samang supplier string ay katulad ng supplierQuery
+  Object.keys(tempBatchMap).forEach(bKey => {
+    const fullSupString = [...tempBatchMap[bKey]].sort().join(" / ");
+    if(fullSupString === supplierQuery) {
+      matchingBatchKeys.add(bKey);
+    }
+  });
+
+  // 2. Kunin lang ang mga rows na kasama sa mga na-filter na BATCH KEYS
+  let matchedRows = [];
+  currentBatch = "";
+
+  bodyRows.forEach(row => {
+    if(!row || row.length === 0) return;
+    const colA = String(row[0] || '').trim();
+
+    if(colA.startsWith('BATCH:')) {
+      currentBatch = colA.replace('BATCH:', '').trim();
+      return;
+    }
+
+    if(matchingBatchKeys.has(currentBatch)) {
+      matchedRows.push({
+        batch: `BATCH: ${currentBatch}`,
+        destName: row[3] || '-',               
+        stockyard: row[6] || '-',              
+        csNo: row[8] || row[12] || '-',         
+        modelDesc: row[11] || row[10] || '-'    
+      });
+    }
+  });
+
+  if(matchedRows.length === 0) {
+    alert("No unit details found for: " + supplierQuery);
+    return;
+  }
+
+  const grouped = {};
+  matchedRows.forEach(item => {
+    if(!grouped[item.batch]) grouped[item.batch] = [];
+    grouped[item.batch].push(item);
+  });
+
+  document.getElementById('subModalTitle').innerText = supplierQuery;
+  document.getElementById('subModalSubtitle').innerText = `Total Units: ${matchedRows.length}`;
+  
+  // Lilinisin ang Model Badges para sa Batch Breakdown view
+  const headerContainer = document.getElementById('subModalHeaderSummary');
+  if (headerContainer) headerContainer.innerHTML = '';
+
+  let html = '';
+  for(const bName in grouped) {
+    html += `
+      <div class="batch-card">
+        <div class="batch-header">${bName}</div>
+        <table class="detail-table">
+          <thead>
+            <tr>
+              <th>Dest Name</th>
+              <th>Vehicle Stockyard</th>
+              <th>C/S No.</th>
+              <th>Model Description</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    grouped[bName].forEach(unit => {
+      html += `
+        <tr>
+          <td>${unit.destName}</td>
+          <td>${unit.stockyard}</td>
+          <td>${unit.csNo}</td>
+          <td>${unit.modelDesc}</td>
+        </tr>
+      `;
+    });
+
+    html += `
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  document.getElementById('subModalBody').innerHTML = html;
+  document.getElementById('subModalBg').style.display = 'flex';
+}
+
+/* --- BUYOFF BREAKDOWN SUB-MODAL LOGIC (DEALER & HEADER MODEL SUMMARY) --- */
+function showBuyoffBreakdown(sn, yardName) {
+  const info = storedData[sn];
+  if(!info) return;
+
+  const bodyRows = info.allRows.slice(4);
+  let dealerData = {};
+  let modelSummary = {};
+  let totalUnits = 0;
+
+  bodyRows.forEach(row => {
+    if(!row || row.length === 0) return;
+    const colA = String(row[0] || '').trim();
+    if(colA.startsWith('BATCH:')) return;
+
+    const rowYard = String(row[6] || '').trim(); // Column G / Vehicle Stockyard
+    
+    if(rowYard === yardName) {
+      const destName = String(row[3] || 'UNKNOWN').trim(); // Column D / Dest Name
+      const modelDesc = String(row[11] || 'N/A').trim();  // Column L / Model Description (Index 11)
+      
+      // 1. Group Dealers & Units
+      dealerData[destName] = (dealerData[destName] || 0) + 1;
+      totalUnits++;
+
+      // 2. Main Model Extraction Logic (e.g., Xpander GLS -> Xpander)
+      let mainModel = 'OTHERS';
+      const descUpper = modelDesc.toUpperCase();
+
+      if (descUpper.includes('XPANDER')) {
+        mainModel = 'Xpander';
+      } else if (descUpper.includes('MONTERO') || descUpper.includes('MONTERO SPT')) {
+        mainModel = 'Montero';
+      } else if (descUpper.includes('MIRAGE')) {
+        mainModel = 'Mirage';
+      } else if (descUpper.includes('DESTINATOR')) {
+        mainModel = 'Destinator';
+      } else if (descUpper.includes('L300')) {
+        mainModel = 'L300';
+      } else if (descUpper.includes('TRITON') || descUpper.includes('STRADA')) {
+        mainModel = 'Triton/Strada';
+      } else if (modelDesc !== 'N/A' && modelDesc !== '') {
+        mainModel = modelDesc.split(' ')[0];
+      }
+
+      modelSummary[mainModel] = (modelSummary[mainModel] || 0) + 1;
+    }
+  });
+
+  document.getElementById('subModalTitle').innerText = yardName;
+  document.getElementById('subModalSubtitle').innerText = `Total Units: ${totalUnits}`;
+
+  // I-render ang Model Badges sa Header Container
+  const headerContainer = document.getElementById('subModalHeaderSummary');
+  if (headerContainer) {
+    let badgesHtml = '';
+    const sortedModels = Object.keys(modelSummary).sort((a, b) => modelSummary[b] - modelSummary[a]);
+    
+    sortedModels.forEach(m => {
+      badgesHtml += `
+        <span style="
+          background: rgba(0, 255, 208, 0.1); 
+          border: 1px solid var(--primary); 
+          color: var(--primary); 
+          padding: 4px 10px; 
+          border-radius: 20px; 
+          font-size: 12px; 
+          font-weight: 600;
+          white-space: nowrap;
+        ">
+          ${m} - <b>${modelSummary[m]}</b>
+        </span>`;
+    });
+
+    headerContainer.innerHTML = badgesHtml;
+  }
+
+  // Dealer Table Generation
+  let html = `
+    <div class="batch-card">
+      <div class="batch-header">DEALER SUMMARY BREAKDOWN</div>
+      <table class="detail-table">
+        <thead>
+          <tr>
+            <th>Dealer (Dest Name)</th>
+            <th style="text-align: right; width: 120px;">Unit Count</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  const sortedDealers = Object.keys(dealerData).sort((a, b) => dealerData[b] - dealerData[a]);
+
+  if(sortedDealers.length === 0) {
+    html += `<tr><td colspan="2" style="text-align:center;">No units found for this stockyard.</td></tr>`;
+  } else {
+    sortedDealers.forEach(dealer => {
+      html += `
+        <tr>
+          <td style="font-weight: 600; color: #f1f5f9;">${dealer}</td>
+          <td style="text-align: right; font-weight: bold; color: var(--primary);">${dealerData[dealer]}</td>
+        </tr>`;
+    });
+  }
+
+  html += `
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  document.getElementById('subModalBody').innerHTML = html;
+  document.getElementById('subModalBg').style.display = 'flex';
 }
 
 /* --- COMPARISON LOGIC --- */
